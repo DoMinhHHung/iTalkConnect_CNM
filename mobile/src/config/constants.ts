@@ -31,7 +31,7 @@ export const API_ENDPOINTS = {
   USERS: "/api/user",
   GROUPS: "/api/groups",
   SEARCH: "/api/search",
-  FRIENDSHIP: "/api/friendship"
+  FRIENDSHIP: "/api/friendship",
 };
 
 // Hàm lấy IP đã lưu hoặc IP mặc định
@@ -82,7 +82,7 @@ const getHostAddress = () => {
 };
 
 // Khởi tạo API URL với IP đầu tiên
-export let API_URL = `http://${getHostAddress()}:${API_PORT}`;
+export let API_URL = "https://italkconnect-v3.onrender.com";
 console.log(`Khởi tạo API_URL: ${API_URL}`);
 
 // Hàm để lấy URL thay thế dựa trên index
@@ -194,24 +194,26 @@ export const getAPIURL = async (forceRefresh = false) => {
 export const getEndpointURL = async (endpoint: string): Promise<string> => {
   const baseUrl = await getAPIURL();
   // Đảm bảo không có dấu / trùng lặp
-  if (endpoint.startsWith('/') && baseUrl.endsWith('/')) {
+  if (endpoint.startsWith("/") && baseUrl.endsWith("/")) {
     return `${baseUrl}${endpoint.substring(1)}`;
   }
-  if (!endpoint.startsWith('/') && !baseUrl.endsWith('/')) {
+  if (!endpoint.startsWith("/") && !baseUrl.endsWith("/")) {
     return `${baseUrl}/${endpoint}`;
   }
   return `${baseUrl}${endpoint}`;
 };
 
 // Hàm tạo URL đầy đủ cho các endpoint đã định nghĩa
-export const getAPIEndpoint = async (endpointKey: keyof typeof API_ENDPOINTS): Promise<string> => {
+export const getAPIEndpoint = async (
+  endpointKey: keyof typeof API_ENDPOINTS
+): Promise<string> => {
   const baseUrl = await getAPIURL();
   const endpoint = API_ENDPOINTS[endpointKey];
   // Đảm bảo không có dấu / trùng lặp
-  if (endpoint.startsWith('/') && baseUrl.endsWith('/')) {
+  if (endpoint.startsWith("/") && baseUrl.endsWith("/")) {
     return `${baseUrl}${endpoint.substring(1)}`;
   }
-  if (!endpoint.startsWith('/') && !baseUrl.endsWith('/')) {
+  if (!endpoint.startsWith("/") && !baseUrl.endsWith("/")) {
     return `${baseUrl}/${endpoint}`;
   }
   return `${baseUrl}${endpoint}`;
@@ -221,12 +223,12 @@ export const getAPIEndpoint = async (endpointKey: keyof typeof API_ENDPOINTS): P
 export const getFallbackURL = (endpoint?: string): string => {
   const baseUrl = `http://${POSSIBLE_IPS[0]}:${API_PORT}`;
   if (!endpoint) return baseUrl;
-  
+
   // Đảm bảo không có dấu / trùng lặp
-  if (endpoint.startsWith('/') && baseUrl.endsWith('/')) {
+  if (endpoint.startsWith("/") && baseUrl.endsWith("/")) {
     return `${baseUrl}${endpoint.substring(1)}`;
   }
-  if (!endpoint.startsWith('/') && !baseUrl.endsWith('/')) {
+  if (!endpoint.startsWith("/") && !baseUrl.endsWith("/")) {
     return `${baseUrl}/${endpoint}`;
   }
   return `${baseUrl}${endpoint}`;

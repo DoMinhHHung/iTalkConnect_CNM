@@ -363,7 +363,7 @@ const ContactsScreen = () => {
           return;
         } catch (secondaryError) {
           console.error("Lỗi endpoint phụ:", secondaryError);
-          throw primaryError; // Ném lại lỗi ban đầu
+          throw primaryError;
         }
       }
     } catch (error) {

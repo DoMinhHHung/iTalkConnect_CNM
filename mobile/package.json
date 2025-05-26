@@ -43,7 +43,9 @@
     "react-native-uuid": "^2.0.3",
     "react-native-video": "^6.13.0",
     "react-native-web": "^0.20.0",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "expo-updates": "~0.28.13",
+    "expo-dev-client": "~5.1.8"
   },
   "devDependencies": {
     "@babel/core": "^7.27.1",

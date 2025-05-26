@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "7c904631-22d8-43d0-b7d5-d5aa7573845b"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7c904631-22d8-43d0-b7d5-d5aa7573845b"
+    },
+    "android": {
+      "package": "com.minhhung0403.italkmobile"
+    },
+    "ios": {}
+  }
+}
