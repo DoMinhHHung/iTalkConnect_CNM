@@ -1,7 +1,12 @@
 "use client";
 
 import axios from "axios";
-import { API_ENDPOINT, testAndSetAPIConnection, getStoredIP, POSSIBLE_IPS } from "../constants";
+import {
+  API_ENDPOINT,
+  testAndSetAPIConnection,
+  getStoredIP,
+  POSSIBLE_IPS,
+} from "../constants";
 
 // Hàm lấy API URL hiện tại hoặc thử với các URL thay thế
 export const getApiUrl = async () => {
@@ -19,7 +24,7 @@ let API_URL = API_ENDPOINT;
 console.log("API URL được khởi tạo là:", API_URL);
 
 // Thử kết nối và cập nhật API URL nếu cần
-getApiUrl().then(url => {
+getApiUrl().then((url) => {
   API_URL = url;
   console.log("API URL sau khi kiểm tra kết nối:", API_URL);
   // Cập nhật baseURL cho axios instance
@@ -32,26 +37,28 @@ export const tryAlternativeEndpoints = async (apiCall: () => Promise<any>) => {
     return await apiCall();
   } catch (error) {
     console.log("API call failed, trying alternative endpoints");
-    
+
     // Try each alternative IP
     for (const ip of POSSIBLE_IPS) {
       if (`http://${ip}:3005/api` === API_URL) continue; // Skip current URL
-      
+
       try {
         console.log(`Trying with alternative IP: ${ip}`);
         const tempUrl = `http://${ip}:3005/api`;
-        
+
         // Temporarily change the baseURL
         const originalUrl = api.defaults.baseURL;
         api.defaults.baseURL = tempUrl;
-        
+
         const result = await apiCall();
-        
+
         // If successful, update the stored IP and API_URL
-        localStorage.setItem('API_IP', ip);
+        localStorage.setItem("API_IP", ip);
         API_URL = tempUrl;
-        console.log(`API call successful with ${tempUrl}, updating default endpoint`);
-        
+        console.log(
+          `API call successful with ${tempUrl}, updating default endpoint`
+        );
+
         return result;
       } catch (altError) {
         console.log(`Alternative IP ${ip} also failed`);
@@ -59,7 +66,7 @@ export const tryAlternativeEndpoints = async (apiCall: () => Promise<any>) => {
         api.defaults.baseURL = API_URL;
       }
     }
-    
+
     // If all alternatives fail, throw the original error
     throw error;
   }

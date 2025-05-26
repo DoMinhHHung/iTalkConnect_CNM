@@ -1,11 +1,5 @@
 // Danh sách các IP có thể sử dụng
-export const POSSIBLE_IPS = [
-  "192.168.1.7",
-  "192.168.1.3",
-  // "192.168.1.5", // IP trước đây đã hoạt động
-  // "192.168.1.4", // IP thay thế khác có thể
-  // "192.168.1.2", // IP thay thế khác có thể
-];
+export const POSSIBLE_IPS = ["italkconnect-v3.onrender.com"];
 
 // Cổng API mặc định
 export const API_PORT = "3005";
@@ -20,101 +14,43 @@ export const API_ENDPOINTS = {
   USERS: "/api/user",
   GROUPS: "/api/groups",
   SEARCH: "/api/search",
-  FRIENDSHIP: "/api/friendship"
+  FRIENDSHIP: "/api/friendship",
 };
 
 // Hàm lấy IP từ localStorage nếu có
 export const getStoredIP = () => {
-  try {
-    const storedIP = localStorage.getItem("API_IP");
-    return storedIP && POSSIBLE_IPS.includes(storedIP)
-      ? storedIP
-      : POSSIBLE_IPS[0];
-  } catch (error) {
-    console.error("Error getting stored IP:", error);
-    return POSSIBLE_IPS[0];
-  }
+  return localStorage.getItem("API_IP") || "italkconnect-v3.onrender.com";
 };
 
 // API endpoints
 export const API_URL = `http://${getStoredIP()}:${API_PORT}`;
 export const SOCKET_URL = API_URL; // Using same URL for socket connection
-export const API_ENDPOINT = `${API_URL}/api`;
+export const API_ENDPOINT = "https://italkconnect-v3.onrender.com/api";
 
 // Tạo URL đầy đủ cho các endpoint
 export const getFullApiUrl = (endpoint: string): string => {
-  // Đảm bảo không có dấu / trùng lặp
-  if (endpoint.startsWith('/') && API_URL.endsWith('/')) {
-    return `${API_URL}${endpoint.substring(1)}`;
-  }
-  if (!endpoint.startsWith('/') && !API_URL.endsWith('/')) {
-    return `${API_URL}/${endpoint}`;
-  }
-  return `${API_URL}${endpoint}`;
+  return `${API_ENDPOINT}${endpoint}`;
 };
 
 // Lấy URL đầy đủ cho các endpoint đã định nghĩa
-export const getApiEndpoint = (endpointKey: keyof typeof API_ENDPOINTS): string => {
-  return getFullApiUrl(API_ENDPOINTS[endpointKey]);
+export const getApiEndpoint = (
+  endpointKey: keyof typeof API_ENDPOINTS
+): string => {
+  return API_ENDPOINTS[endpointKey];
 };
 
 // Hàm kiểm tra kết nối API và thay đổi IP nếu cần
 export const testAndSetAPIConnection = async () => {
-  let currentAPI = API_URL;
-  let connected = false;
-
   try {
-    // Thử API hiện tại trước
-    console.log(`Testing current API URL: ${currentAPI}`);
-    const response = await fetch(`${currentAPI}/api/health`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
+    const response = await fetch(API_ENDPOINT);
     if (response.ok) {
-      console.log(`API connection test successful to ${currentAPI}/api/health`);
-      localStorage.setItem("API_IP", getStoredIP());
-      connected = true;
-      return currentAPI;
+      return "https://italkconnect-v3.onrender.com";
     }
+    throw new Error("API connection failed");
   } catch (error) {
-    console.log(`API connection test failed for ${currentAPI}:`, error);
+    console.error("Error testing API connection:", error);
+    return "https://italkconnect-v3.onrender.com";
   }
-
-  if (!connected) {
-    // Thử các IP khác
-    for (const ip of POSSIBLE_IPS) {
-      const testUrl = `http://${ip}:${API_PORT}`;
-      if (testUrl === currentAPI) continue; // Bỏ qua IP hiện tại
-
-      try {
-        console.log(`Trying alternative IP: ${testUrl}`);
-        const response = await fetch(`${testUrl}/api/health`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (response.ok) {
-          console.log(`Found working API at ${testUrl}`);
-          localStorage.setItem("API_IP", ip);
-
-          // Tải lại trang để áp dụng IP mới
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-
-          return testUrl;
-        }
-      } catch (altError) {
-        console.log(`Alternative IP ${testUrl} failed:`, altError);
-      }
-    }
-
-    console.log("All API connections failed");
-    return currentAPI; // Trả về API hiện tại nếu tất cả đều thất bại
-  }
-
-  return currentAPI;
 };
 
 // Kiểm tra kết nối khi trang được tải
