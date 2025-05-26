@@ -315,7 +315,7 @@ const ChatSidebar: React.FC = () => {
                 {chat.lastMessage
                   ? getLastMessagePreview(chat)
                   : chat.isGroup
-                  ? "Không có tin nhắn"
+                  ? getLastMessagePreview(chat) || "Không có tin nhắn"
                   : chat.isOnline
                   ? "Đang hoạt động"
                   : "Ngoại tuyến"}
