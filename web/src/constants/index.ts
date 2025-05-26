@@ -23,9 +23,9 @@ export const getStoredIP = () => {
 };
 
 // API endpoints
-export const API_URL = `http://${getStoredIP()}:${API_PORT}`;
-export const SOCKET_URL = API_URL; // Using same URL for socket connection
-export const API_ENDPOINT = "https://italkconnect-v3.onrender.com/api";
+export const API_URL = "https://italkconnect-v3.onrender.com";
+export const API_ENDPOINT = `${API_URL}/api`;
+export const SOCKET_URL = API_URL;
 
 // Tạo URL đầy đủ cho các endpoint
 export const getFullApiUrl = (endpoint: string): string => {

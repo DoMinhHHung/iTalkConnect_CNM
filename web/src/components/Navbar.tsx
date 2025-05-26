@@ -135,7 +135,7 @@ const Navbar: React.FC = () => {
                     </li>
                     <li className="nav-item">
                       <Link className="nav-link message-link" to="/chats">
-                        Chat
+                        Tin nhắn
                         {totalNotifications > 0 && (
                           <span className="notification-badge message-notification">
                             {totalNotifications}
