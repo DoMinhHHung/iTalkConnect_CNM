@@ -53,14 +53,14 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
       setIsFetchingFriends(true);
       setError(null);
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         setError("Authentication token not found. Please log in again.");
         return;
       }
 
       const response = await axios.get(
-        "http://localhost:3005/api/friendship",
+        "https://italkconnect-v3.onrender.com/api/friendship",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -69,10 +69,11 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
       // Process the friendship data to get just the friends
       const friendsList = response.data.map((friendship: any) => {
         // Determine which user is the friend (not the current user)
-        const friend = friendship.requester._id !== user?._id 
-          ? friendship.requester 
-          : friendship.recipient;
-        
+        const friend =
+          friendship.requester._id !== user?._id
+            ? friendship.requester
+            : friendship.recipient;
+
         return {
           _id: friend._id,
           name: friend.name,
@@ -95,13 +96,13 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    
+
     if (!query.trim()) {
       setFilteredFriends(friends);
       return;
     }
-    
-    const filtered = friends.filter(friend => 
+
+    const filtered = friends.filter((friend) =>
       friend.name.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredFriends(filtered);
@@ -109,7 +110,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
 
   // Handle selecting a friend
   const handleSelectFriend = (friend: Friend) => {
-    if (selectedFriends.some(f => f._id === friend._id)) {
+    if (selectedFriends.some((f) => f._id === friend._id)) {
       return;
     }
     setSelectedFriends([...selectedFriends, friend]);
@@ -117,7 +118,9 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
 
   // Handle removing a selected friend
   const handleRemoveFriend = (friendId: string) => {
-    setSelectedFriends(selectedFriends.filter(friend => friend._id !== friendId));
+    setSelectedFriends(
+      selectedFriends.filter((friend) => friend._id !== friendId)
+    );
   };
 
   // Handle avatar upload
@@ -177,7 +180,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
 
         // Use the Cloudinary upload endpoint instead of the regular upload endpoint
         const uploadResponse = await axios.post(
-          "http://localhost:3005/api/chat/upload-cloudinary",
+          "https://italkconnect-v3.onrender.com/api/chat/upload-cloudinary",
           formData,
           {
             headers: {
@@ -188,15 +191,16 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
         );
 
         // Handle the different response format from Cloudinary endpoint
-        avatarUrl = uploadResponse.data.url || 
-                   (uploadResponse.data.file && uploadResponse.data.file.fileUrl);
-        
+        avatarUrl =
+          uploadResponse.data.url ||
+          (uploadResponse.data.file && uploadResponse.data.file.fileUrl);
+
         console.log("Avatar uploaded successfully:", avatarUrl);
       }
 
       // Create the group
       const response = await axios.post(
-        "http://localhost:3005/api/groups/create",
+        "https://italkconnect-v3.onrender.com/api/groups/create",
         {
           name: groupName,
           description: groupDescription,
@@ -319,7 +323,7 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
                 </p>
               </div>
             </div>
-            
+
             <div className="search-container">
               <div className="search-input-container">
                 <input
@@ -333,15 +337,17 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
             </div>
 
             {isFetchingFriends ? (
-              <div className="loading-friends">Loading your friends list...</div>
+              <div className="loading-friends">
+                Loading your friends list...
+              </div>
             ) : (
               <>
                 <div className="friends-list">
                   <h3>Your Friends</h3>
                   {filteredFriends.length === 0 ? (
                     <p className="no-friends">
-                      {friends.length === 0 
-                        ? "You don't have any friends yet" 
+                      {friends.length === 0
+                        ? "You don't have any friends yet"
                         : "No friends match your search"}
                     </p>
                   ) : (
@@ -361,9 +367,13 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
                           <button
                             className="add-friend-button"
                             onClick={() => handleSelectFriend(friend)}
-                            disabled={selectedFriends.some(f => f._id === friend._id)}
+                            disabled={selectedFriends.some(
+                              (f) => f._id === friend._id
+                            )}
                           >
-                            {selectedFriends.some(f => f._id === friend._id) ? (
+                            {selectedFriends.some(
+                              (f) => f._id === friend._id
+                            ) ? (
                               <FiCheck />
                             ) : (
                               <FiPlus />
@@ -378,7 +388,8 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ onClose }) => {
                 <div className="selected-friends">
                   <h3>
                     Selected Members{" "}
-                    {selectedFriends.length > 0 && `(${selectedFriends.length})`}
+                    {selectedFriends.length > 0 &&
+                      `(${selectedFriends.length})`}
                   </h3>
                   {selectedFriends.length === 0 ? (
                     <p className="no-selected">No members selected yet</p>

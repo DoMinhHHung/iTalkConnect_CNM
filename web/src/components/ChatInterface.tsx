@@ -221,7 +221,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === message._id
-            ? { ...msg, content: "Tin nhắn đã bị thu hồi", unsent: true, isUnsent: true }
+            ? {
+                ...msg,
+                content: "Tin nhắn đã bị thu hồi",
+                unsent: true,
+                isUnsent: true,
+              }
             : msg
         )
       );
@@ -233,7 +238,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           senderId: user._id,
           receiverId: friendId,
         });
-        
+
         console.log("Emitted unsendMessage socket event:", {
           messageId: message._id,
           senderId: user._id,
@@ -250,14 +255,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
     } catch (error) {
       console.error("Error unsending message:", error);
       // Khôi phục tin nhắn nếu có lỗi
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === message._id
-            ? { ...message }  // Khôi phục lại tin nhắn gốc
+            ? { ...message } // Khôi phục lại tin nhắn gốc
             : msg
         )
       );
@@ -283,7 +287,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
       });
 
       console.log("Emitted hideMessage socket event:", {
-        messageId: message._id
+        messageId: message._id,
       });
 
       // Đóng menu tương tác nếu đang mở
@@ -321,52 +325,57 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg._id === data.messageId
-              ? { ...msg, content: "Tin nhắn đã bị thu hồi", unsent: true, isUnsent: true }
+              ? {
+                  ...msg,
+                  content: "Tin nhắn đã bị thu hồi",
+                  unsent: true,
+                  isUnsent: true,
+                }
               : msg
           )
         );
       });
-      
+
       // Lắng nghe sự kiện reaction từ người dùng khác
       newSocket.on("messageReaction", (data) => {
         console.log("Received messageReaction event:", data);
-        
+
         try {
           // Log toàn bộ cấu trúc dữ liệu để debug
           console.log("Reaction data structure:", JSON.stringify(data));
-          
+
           // Ensure we have all required fields
           const messageId = data.messageId;
           const userId = data.userId || data.senderId; // Handle both formats
           const emoji = data.emoji;
-          
+
           // Kiểm tra null/undefined
           if (!messageId || !userId) {
             console.error("Missing messageId or userId in reaction data");
             return;
           }
-          
+
           // Normalize emoji format
           const normalizedEmoji = normalizeEmoji(emoji);
-          
+
           // Cập nhật reactions trong state messages
           setMessages((prevMessages) =>
             prevMessages.map((msg) => {
               if (msg._id === messageId) {
                 // If the server provided a complete reactions object, use that
-                if (data.reactions && typeof data.reactions === 'object') {
+                if (data.reactions && typeof data.reactions === "object") {
                   console.log("Using server-provided reactions map");
                   return {
                     ...msg,
-                    reactions: data.reactions
+                    reactions: data.reactions,
                   };
                 }
 
                 // Otherwise, update only the specific reaction
                 const updatedReactions = { ...(msg.reactions || {}) };
-                
+
                 // Empty emoji means remove reaction
-                if (!emoji || emoji === '') {
+                if (!emoji || emoji === "") {
                   if (updatedReactions[userId]) {
                     delete updatedReactions[userId];
                     console.log(`Removed reaction from user ${userId}`);
@@ -375,12 +384,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
                 // Otherwise add/update the reaction
                 else {
                   updatedReactions[userId] = normalizedEmoji;
-                  console.log(`Added reaction ${normalizedEmoji} for user ${userId}`);
+                  console.log(
+                    `Added reaction ${normalizedEmoji} for user ${userId}`
+                  );
                 }
-                
+
                 return {
                   ...msg,
-                  reactions: updatedReactions
+                  reactions: updatedReactions,
                 };
               }
               return msg;
@@ -574,7 +585,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
 
         try {
           const friendResponse = await axios.get(
-            `http://localhost:3005/api/auth/${friendId}`,
+            `https://italkconnect-v3.onrender.com/api/auth/${friendId}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -593,7 +604,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           try {
             console.log("Thử với endpoint dự phòng...");
             const backupResponse = await axios.get(
-              `http://localhost:3005/api/auth/search/${friendId}`,
+              `https://italkconnect-v3.onrender.com/api/auth/search/${friendId}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
@@ -624,7 +635,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
         try {
           console.log(`Đang lấy tin nhắn giữa ${user._id} và ${friendId}`);
           const messagesResponse = await axios.get(
-            `http://localhost:3005/api/chat/messages/${user._id}/${friendId}`,
+            `https://italkconnect-v3.onrender.com/api/chat/messages/${user._id}/${friendId}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -788,7 +799,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
       if (replyToMessage) {
         formData.append("replyToId", replyToMessage._id);
       }
-      
+
       // Add temporary message to UI immediately
       setMessages((prev) => [
         ...prev,
@@ -806,7 +817,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           tempId: tempId,
         },
       ]);
-      
+
       // Upload file
       const response = await axios.post(
         `${API_ENDPOINT}/chat/upload-cloudinary`,
@@ -826,7 +837,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           },
         }
       );
-      
+
       const fileData = response.data.file || response.data;
       console.log("File uploaded successfully:", fileData);
 
@@ -859,14 +870,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
             fileSize: file.size,
             tempId: tempId,
           };
-          
+
           // Emit both message formats for compatibility
           socket.emit("privateMessage", messageData);
           socket.emit("message", {
             ...messageData,
             room: roomId,
           });
-          
+
           messageSent = true;
           console.log("File message sent via socket");
         } catch (socketError) {
@@ -899,7 +910,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
               },
             }
           );
-          
+
           console.log("File message sent via API:", apiResponse.data);
         } catch (apiError) {
           console.error("API fallback failed:", apiError);
@@ -912,7 +923,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           setTimeout(() => setError(null), 3000);
         }
       }
-      
+
       // Reset state
       setReplyToMessage(null);
       setIsReplying(false);
@@ -986,33 +997,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
   // Xử lý thả emoji cho tin nhắn
   const handleReaction = async (emoji: string) => {
     if (!selectedMessage || !user) return;
-    
+
     try {
       console.log("Adding reaction:", {
         messageId: selectedMessage._id,
         userId: user._id,
         emoji: emoji,
       });
-      
+
       // Lưu trạng thái reactions ban đầu để khôi phục nếu có lỗi
-      const originalMessage = messages.find(m => m._id === selectedMessage._id);
+      const originalMessage = messages.find(
+        (m) => m._id === selectedMessage._id
+      );
       const originalReactions = originalMessage?.reactions || {};
-      
+
       // Kiểm tra xem có đang toggle reaction không - so sánh chính xác chuỗi emoji
-      const isTogglingOff = originalReactions && 
-                           originalReactions[user._id] === emoji;
-      
+      const isTogglingOff =
+        originalReactions && originalReactions[user._id] === emoji;
+
       // Emoji rỗng khi toggle off, nguyên bản khi toggle on
       const finalEmoji = isTogglingOff ? "" : emoji;
-      
-      console.log(`${isTogglingOff ? 'Removing' : 'Adding'} reaction '${emoji}' for message ${selectedMessage._id}`);
-      
+
+      console.log(
+        `${
+          isTogglingOff ? "Removing" : "Adding"
+        } reaction '${emoji}' for message ${selectedMessage._id}`
+      );
+
       // Cập nhật UI ngay lập tức (optimistic update)
-      setMessages((prevMessages) => 
+      setMessages((prevMessages) =>
         prevMessages.map((msg) => {
           if (msg._id === selectedMessage._id) {
             const updatedReactions = { ...(msg.reactions || {}) };
-            
+
             // Toggle reaction (thêm nếu chưa có, xóa nếu đã có)
             if (isTogglingOff) {
               delete updatedReactions[user._id];
@@ -1021,7 +1038,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
               updatedReactions[user._id] = emoji;
               console.log(`Added ${emoji} reaction for user ${user._id} to UI`);
             }
-            
+
             return {
               ...msg,
               reactions: updatedReactions,
@@ -1034,28 +1051,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
       // Đóng menu trước khi gửi request để UI phản hồi nhanh
       setSelectedMessage(null);
       setShowEmojiPicker(false);
-      
+
       // Thử gửi qua socket trước
       let success = false;
       if (socket && socket.connected) {
         try {
           // Make sure emoji is a simple string, not an object
-          const cleanEmoji = typeof finalEmoji === 'object' ? 
-                            (finalEmoji as any).emoji || "" : 
-                            finalEmoji;
-                            
+          const cleanEmoji =
+            typeof finalEmoji === "object"
+              ? (finalEmoji as any).emoji || ""
+              : finalEmoji;
+
           // Chuẩn bị dữ liệu để gửi qua socket
           const reactionData = {
             messageId: selectedMessage._id,
             userId: user._id,
-            emoji: cleanEmoji,  // Emoji rỗng khi xóa reaction
+            emoji: cleanEmoji, // Emoji rỗng khi xóa reaction
           };
-          
-          console.log("Sending addReaction event via socket with data:", reactionData);
-          
-          // Ensure emoji is sent in the correct format 
+
+          console.log(
+            "Sending addReaction event via socket with data:",
+            reactionData
+          );
+
+          // Ensure emoji is sent in the correct format
           socket.emit("addReaction", reactionData);
-          
+
           success = true;
           console.log("Reaction sent successfully via socket");
         } catch (socketError) {
@@ -1081,9 +1102,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
       }
     } catch (error) {
       console.error("Error sending reaction:", error);
-      
+
       // Khôi phục UI nếu có lỗi
-      const originalMessage = messages.find(m => m._id === selectedMessage._id);
+      const originalMessage = messages.find(
+        (m) => m._id === selectedMessage._id
+      );
       setMessages((prevMessages) =>
         prevMessages.map((msg) => {
           if (msg._id === selectedMessage?._id) {
@@ -1092,7 +1115,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           return msg;
         })
       );
-      
+
       // Hiển thị thông báo lỗi ngắn
       alert("Could not send reaction. Please try again.");
     }
@@ -1362,38 +1385,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
   // Hàm chuẩn hóa emoji từ nhiều định dạng khác nhau
   const normalizeEmoji = (emoji: any): string => {
     if (!emoji) return "👍"; // Default emoji
-    
+
     // Mapping các giá trị emoji thông thường
-    const emojiMap: {[key: string]: string} = {
-      "like": "👍",
-      "love": "❤️",
-      "haha": "😂",
-      "wow": "😮",
-      "sad": "😢", 
-      "angry": "😡",
-      "fire": "🔥",
-      "clap": "👏",
-      "thumbsup": "👍",
-      "thumbs_up": "👍",
+    const emojiMap: { [key: string]: string } = {
+      like: "👍",
+      love: "❤️",
+      haha: "😂",
+      wow: "😮",
+      sad: "😢",
+      angry: "😡",
+      fire: "🔥",
+      clap: "👏",
+      thumbsup: "👍",
+      thumbs_up: "👍",
       "thumbs-up": "👍",
     };
-    
+
     // Nếu là chuỗi, kiểm tra xem có trong map không
-    if (typeof emoji === 'string') {
+    if (typeof emoji === "string") {
       const lowerEmoji = emoji.toLowerCase().trim();
       return emojiMap[lowerEmoji] || emoji;
     }
-    
+
     // Nếu là object, thử lấy từ thuộc tính emoji
-    if (typeof emoji === 'object' && emoji !== null) {
-      if (emoji.emoji && typeof emoji.emoji === 'string') {
+    if (typeof emoji === "object" && emoji !== null) {
+      if (emoji.emoji && typeof emoji.emoji === "string") {
         return emoji.emoji;
       }
-      if (emoji.type && typeof emoji.type === 'string') {
+      if (emoji.type && typeof emoji.type === "string") {
         return emojiMap[emoji.type.toLowerCase()] || emoji.type;
       }
     }
-    
+
     return "👍"; // Mặc định nếu không nhận dạng được
   };
 
@@ -1672,9 +1695,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
                       onClick={() => handleReply(message)}
                       title="Trả lời"
                     >
-                      <span role="img" aria-label="Reply">↩️</span>
+                      <span role="img" aria-label="Reply">
+                        ↩️
+                      </span>
                     </button>
-                    
+
                     {/* Facebook-style quick reactions bar */}
                     <div className="quick-reactions">
                       {commonEmojis.slice(0, 6).map((item) => (
@@ -1699,10 +1724,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
                         }}
                         title="Thêm cảm xúc"
                       >
-                        <span role="img" aria-label="More reactions">+</span>
+                        <span role="img" aria-label="More reactions">
+                          +
+                        </span>
                       </button>
                     </div>
-                    
+
                     {/* Thêm nút tải xuống cho file, ảnh, video */}
                     {["image", "video", "audio", "file"].includes(
                       message.type || ""
@@ -1715,10 +1742,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
                         }}
                         title="Tải xuống"
                       >
-                        <span role="img" aria-label="Download">💾</span>
+                        <span role="img" aria-label="Download">
+                          💾
+                        </span>
                       </button>
                     )}
-                    
+
                     {/* Nút xóa tin nhắn (với tất cả) */}
                     <button
                       className="hover-action-button delete-button"
@@ -1728,9 +1757,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
                       }}
                       title="Xóa tin nhắn"
                     >
-                      <span role="img" aria-label="Delete">🗑️</span>
+                      <span role="img" aria-label="Delete">
+                        🗑️
+                      </span>
                     </button>
-                    
+
                     {/* Nút thu hồi tin nhắn */}
                     {isMessageFromCurrentUser(message, user?._id) && (
                       <button
@@ -1741,7 +1772,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
                         }}
                         title="Thu hồi tin nhắn"
                       >
-                        <span role="img" aria-label="Unsend">↩️</span>
+                        <span role="img" aria-label="Unsend">
+                          ↩️
+                        </span>
                       </button>
                     )}
                   </div>
@@ -1900,7 +1933,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ overrideFriendId }) => {
           </button>
         </form>
       </div>
-      
+
       {/* Container for confirm dialogs */}
       <div id="confirm-dialog-root"></div>
     </div>

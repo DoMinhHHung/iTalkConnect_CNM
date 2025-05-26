@@ -51,7 +51,7 @@ const GroupManagement: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:3005/api/groups/user/groups",
+        "https://italkconnect-v3.onrender.com/api/groups/user/groups",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -67,7 +67,7 @@ const GroupManagement: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:3005/api/friendship/friends",
+        "https://italkconnect-v3.onrender.com/api/friendship/friends",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -101,21 +101,21 @@ const GroupManagement: React.FC = () => {
       const formData = new FormData();
       formData.append("name", newGroup.name);
       formData.append("description", newGroup.description);
-      selectedMembers.forEach(memberId => {
+      selectedMembers.forEach((memberId) => {
         formData.append("members", memberId);
       });
-      
+
       if (groupAvatar) {
         formData.append("avatar", groupAvatar);
       }
 
       await axios.post(
-        "http://localhost:3005/api/groups/create",
+        "https://italkconnect-v3.onrender.com/api/groups/create",
         formData,
         {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data"
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -153,9 +153,12 @@ const GroupManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:3005/api/groups/${groupId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `https://italkconnect-v3.onrender.com/api/groups/${groupId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setSuccess("Xóa nhóm thành công!");
       fetchGroups();
     } catch (error) {
@@ -248,9 +251,9 @@ const GroupManagement: React.FC = () => {
                 {previewAvatar ? (
                   <div className="avatar-preview">
                     <img src={previewAvatar} alt="Group avatar preview" />
-                    <button 
-                      type="button" 
-                      className="remove-avatar" 
+                    <button
+                      type="button"
+                      className="remove-avatar"
                       onClick={handleRemoveAvatar}
                     >
                       ×
@@ -365,10 +368,10 @@ const GroupManagement: React.FC = () => {
                 <div className="group-info">
                   <div className="group-header-info">
                     {group.avatar ? (
-                      <img 
-                        src={group.avatar} 
-                        alt={group.name} 
-                        className="group-avatar" 
+                      <img
+                        src={group.avatar}
+                        alt={group.name}
+                        className="group-avatar"
                       />
                     ) : (
                       <div className="group-avatar-placeholder">

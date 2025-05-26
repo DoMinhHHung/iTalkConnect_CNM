@@ -86,7 +86,7 @@ export const updateUser = async (userId: string, userData: any) => {
     if (!token) throw new Error("No token found");
 
     const response = await axios.put(
-      `http://localhost:3005/api/auth/update/${userId}`,
+      `https://italkconnect-v3.onrender.com/api/auth/update/${userId}`,
       userData,
       {
         headers: {
@@ -153,7 +153,7 @@ export const uploadAvatar = async (userId: string, avatarUrl: string) => {
     if (!token) throw new Error("No token found");
 
     const response = await axios.put(
-      `http://localhost:3005/api/auth/upload-avatar/${userId}`,
+      `https://italkconnect-v3.onrender.com/api/auth/upload-avatar/${userId}`,
       { avatarUrl },
       {
         headers: {

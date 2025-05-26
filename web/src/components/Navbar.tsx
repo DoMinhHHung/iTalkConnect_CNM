@@ -39,7 +39,7 @@ const Navbar: React.FC = () => {
       // Chỉ tạo socket nếu chưa tồn tại
       if (!socket) {
         console.log("Tạo kết nối socket mới");
-        const newSocket = io("http://localhost:3005", {
+        const newSocket = io("https://italkconnect-v3.onrender.com", {
           query: { token: localStorage.getItem("token") },
           reconnection: true,
           reconnectionAttempts: 5,

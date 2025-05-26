@@ -74,7 +74,7 @@ const FriendsPage: React.FC = () => {
       // Lấy danh sách bạn bè
       try {
         const friendsResponse = await axios.get(
-          "http://localhost:3005/api/friendship",
+          "https://italkconnect-v3.onrender.com/api/friendship",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -93,7 +93,7 @@ const FriendsPage: React.FC = () => {
       // Lấy tất cả yêu cầu kết bạn (thay vì gọi riêng lẻ)
       try {
         const requestsResponse = await axios.get(
-          "http://localhost:3005/api/friendship/requests",
+          "https://italkconnect-v3.onrender.com/api/friendship/requests",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -127,7 +127,7 @@ const FriendsPage: React.FC = () => {
       setIsSearching(true);
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:3005/api/search/users?q=${encodeURIComponent(
+        `https://italkconnect-v3.onrender.com/api/search/users?q=${encodeURIComponent(
           searchQuery
         )}`,
         {
@@ -148,7 +148,7 @@ const FriendsPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:3005/api/friendship/send-request",
+        "https://italkconnect-v3.onrender.com/api/friendship/send-request",
         { recipientId: userId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -166,7 +166,7 @@ const FriendsPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:3005/api/friendship/accept-request",
+        "https://italkconnect-v3.onrender.com/api/friendship/accept-request",
         { friendshipId: requestId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -184,7 +184,7 @@ const FriendsPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:3005/api/friendship/reject-request",
+        "https://italkconnect-v3.onrender.com/api/friendship/reject-request",
         { friendshipId: requestId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -203,7 +203,7 @@ const FriendsPage: React.FC = () => {
       const token = localStorage.getItem("token");
       // Đơn giản là gọi API từ chối, vì không có API hủy riêng
       await axios.post(
-        "http://localhost:3005/api/friendship/reject-request",
+        "https://italkconnect-v3.onrender.com/api/friendship/reject-request",
         { friendshipId: requestId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -221,7 +221,7 @@ const FriendsPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `http://localhost:3005/api/friendship/unfriend/${friendId}`,
+        `https://italkconnect-v3.onrender.com/api/friendship/unfriend/${friendId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

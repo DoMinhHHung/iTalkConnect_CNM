@@ -49,7 +49,7 @@ const ProfilePage: React.FC = () => {
         }
 
         const response = await axios.get(
-          `http://localhost:3005/api/auth/user/${targetId}`,
+          `https://italkconnect-v3.onrender.com/api/auth/user/${targetId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -90,7 +90,7 @@ const ProfilePage: React.FC = () => {
       try {
         // Lấy số lượng bạn bè
         const friendsRes = await axios.get(
-          "http://localhost:3005/api/friendship",
+          "https://italkconnect-v3.onrender.com/api/friendship",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -105,7 +105,7 @@ const ProfilePage: React.FC = () => {
 
         // Lấy số lượng nhóm
         const groupsRes = await axios.get(
-          "http://localhost:3005/api/groups/user/groups",
+          "https://italkconnect-v3.onrender.com/api/groups/user/groups",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

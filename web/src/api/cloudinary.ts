@@ -83,7 +83,7 @@ export const uploadImageToCloudinary = async (
 
     // Use the existing server endpoint for Cloudinary uploads
     const response = await axios.post(
-      `http://localhost:3005/api/chat/upload-cloudinary`,
+      `https://italkconnect-v3.onrender.com/api/chat/upload-cloudinary`,
       {
         image: compressedImage,
         folder: folder,
@@ -112,7 +112,7 @@ export const uploadImageToCloudinary = async (
 };
 
 /**
- * Upload any file to server using FormData 
+ * Upload any file to server using FormData
  * Supports images, videos, audio, and documents
  * @param file File to upload
  * @param onProgress Optional callback for upload progress
@@ -136,48 +136,52 @@ export const uploadFile = async (
     // Create FormData object
     const formData = new FormData();
     formData.append("file", file);
-    
+
     // Determine file type
     let fileType = "file";
     if (file.type.startsWith("image/")) fileType = "image";
     else if (file.type.startsWith("video/")) fileType = "video";
     else if (file.type.startsWith("audio/")) fileType = "audio";
-    
+
     // Add file type to request
     formData.append("type", fileType);
-    
+
     // Determine API endpoint based on file size
     const isLargeFile = file.size > 5 * 1024 * 1024; // 5MB
-    const endpoint = isLargeFile 
-      ? "http://localhost:3005/api/chat/upload-cloudinary" 
-      : "http://localhost:3005/api/chat/upload";
+    const endpoint = isLargeFile
+      ? "https://italkconnect-v3.onrender.com/api/chat/upload-cloudinary"
+      : "https://italkconnect-v3.onrender.com/api/chat/upload";
 
-    console.log(`Uploading ${fileType} (${Math.round(file.size/1024)}KB) to ${endpoint}`);
-    
-    // Adjust timeout based on file size 
+    console.log(
+      `Uploading ${fileType} (${Math.round(file.size / 1024)}KB) to ${endpoint}`
+    );
+
+    // Adjust timeout based on file size
     const baseTimeout = 30000; // 30 seconds
     const timeoutPerMB = 5000; // 5 seconds per MB
     const fileSizeMB = file.size / (1024 * 1024);
     const calculatedTimeout = Math.min(
-      baseTimeout + (fileSizeMB * timeoutPerMB), 
+      baseTimeout + fileSizeMB * timeoutPerMB,
       10 * 60 * 1000 // Max 10 minutes
     );
-    
+
     // Execute the upload request
     const response = await axios.post(endpoint, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       timeout: calculatedTimeout,
       onUploadProgress: (progressEvent) => {
         if (progressEvent.total && onProgress) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
           onProgress(percentCompleted);
         }
-      }
+      },
     });
-    
+
     // Extract file data from response
     if (response.data) {
       if (response.data.file) {
@@ -194,46 +198,50 @@ export const uploadFile = async (
         };
       }
     }
-    
+
     throw new Error("Invalid response format from server");
   } catch (error: any) {
     console.error("Error uploading file:", error);
-    
+
     // Try alternative upload method if first one fails
     // Only for regular uploads, not for large files
     if (file.size <= 5 * 1024 * 1024) {
       try {
-        console.log("Primary upload failed, trying alternative upload endpoint...");
-        
+        console.log(
+          "Primary upload failed, trying alternative upload endpoint..."
+        );
+
         const formData = new FormData();
         formData.append("file", file);
-        
+
         let fileType = "file";
         if (file.type.startsWith("image/")) fileType = "image";
         else if (file.type.startsWith("video/")) fileType = "video";
         else if (file.type.startsWith("audio/")) fileType = "audio";
-        
+
         formData.append("type", fileType);
-        
+
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          "http://localhost:3005/api/chat/upload",
+          "https://italkconnect-v3.onrender.com/api/chat/upload",
           formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
             timeout: 60000,
             onUploadProgress: (progressEvent) => {
               if (progressEvent.total && onProgress) {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                const percentCompleted = Math.round(
+                  (progressEvent.loaded * 100) / progressEvent.total
+                );
                 onProgress(percentCompleted);
               }
-            }
+            },
           }
         );
-        
+
         if (response.data && (response.data.fileUrl || response.data.file)) {
           if (response.data.file) {
             return response.data.file;
@@ -251,8 +259,8 @@ export const uploadFile = async (
         console.error("Alternative upload also failed:", alternativeError);
       }
     }
-    
+
     // Re-throw original error if all attempts fail
-    throw new Error(error.response?.data?.message || 'Failed to upload file');
+    throw new Error(error.response?.data?.message || "Failed to upload file");
   }
 };

@@ -39,10 +39,10 @@ const ChatSidebar: React.FC = () => {
         setError(null);
 
         const token = localStorage.getItem("token");
-        
+
         // Fetch friends (direct messages)
         const friendsResponse = await axios.get(
-          `http://localhost:3005/api/friendship`,
+          `https://italkconnect-v3.onrender.com/api/friendship`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -52,7 +52,7 @@ const ChatSidebar: React.FC = () => {
 
         // Fetch groups (group chats)
         const groupsResponse = await axios.get(
-          "http://localhost:3005/api/groups/user/groups",
+          "https://italkconnect-v3.onrender.com/api/groups/user/groups",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -65,7 +65,7 @@ const ChatSidebar: React.FC = () => {
         );
 
         const directChats: ChatItem[] = [];
-        
+
         // Create a list to hold promises for fetching last messages
         const lastMessagePromises: Array<Promise<any>> = [];
 
@@ -91,33 +91,41 @@ const ChatSidebar: React.FC = () => {
             isGroup: false,
             isOnline: false, // Default, can be updated via socket
           };
-          
+
           directChats.push(chatItem);
-          
+
           // Create a promise to fetch the last message for this chat
-          const lastMessagePromise = axios.get(
-            `http://localhost:3005/api/chat/last-message/${user._id}/${friend._id}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ).then(response => {
-            const lastMessage = response.data;
-            if (lastMessage) {
-              // Find the corresponding chat item and add the last message
-              const chat = directChats.find(chat => chat._id === friend._id);
-              if (chat) {
-                chat.lastMessage = {
-                  content: lastMessage.content,
-                  sender: lastMessage.sender,
-                  createdAt: lastMessage.createdAt,
-                  type: lastMessage.type
-                };
+          const lastMessagePromise = axios
+            .get(
+              `https://italkconnect-v3.onrender.com/api/chat/last-message/${user._id}/${friend._id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
               }
-            }
-          }).catch(error => {
-            console.error(`Error fetching last message for chat with ${friend._id}:`, error);
-          });
-          
+            )
+            .then((response) => {
+              const lastMessage = response.data;
+              if (lastMessage) {
+                // Find the corresponding chat item and add the last message
+                const chat = directChats.find(
+                  (chat) => chat._id === friend._id
+                );
+                if (chat) {
+                  chat.lastMessage = {
+                    content: lastMessage.content,
+                    sender: lastMessage.sender,
+                    createdAt: lastMessage.createdAt,
+                    type: lastMessage.type,
+                  };
+                }
+              }
+            })
+            .catch((error) => {
+              console.error(
+                `Error fetching last message for chat with ${friend._id}:`,
+                error
+              );
+            });
+
           lastMessagePromises.push(lastMessagePromise);
         }
 
@@ -131,7 +139,7 @@ const ChatSidebar: React.FC = () => {
           lastMessage: group.lastMessage,
           memberCount: group.members.length,
         }));
-        
+
         // Wait for all last message fetches to complete
         await Promise.allSettled(lastMessagePromises);
 
@@ -139,8 +147,10 @@ const ChatSidebar: React.FC = () => {
         const allChats = [...directChats, ...groupChats].sort((a, b) => {
           // If both have last messages, sort by date
           if (a.lastMessage && b.lastMessage) {
-            return new Date(b.lastMessage.createdAt).getTime() - 
-                   new Date(a.lastMessage.createdAt).getTime();
+            return (
+              new Date(b.lastMessage.createdAt).getTime() -
+              new Date(a.lastMessage.createdAt).getTime()
+            );
           }
           // If only one has a last message, it comes first
           if (a.lastMessage) return -1;
@@ -206,7 +216,9 @@ const ChatSidebar: React.FC = () => {
     const senderName =
       chatItem.lastMessage.sender === user?._id
         ? "You"
-        : chatItem.isGroup ? "Unknown" : chatItem.name;
+        : chatItem.isGroup
+        ? "Unknown"
+        : chatItem.name;
 
     let content = chatItem.lastMessage.content;
 
@@ -234,7 +246,11 @@ const ChatSidebar: React.FC = () => {
   const renderAvatar = (chatItem: ChatItem) => {
     if (chatItem.avatar) {
       return (
-        <img src={chatItem.avatar} alt={chatItem.name} className="chat-avatar" />
+        <img
+          src={chatItem.avatar}
+          alt={chatItem.name}
+          className="chat-avatar"
+        />
       );
     }
 
@@ -246,7 +262,9 @@ const ChatSidebar: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="chat-sidebar-loading">Đang tải danh sách chat...</div>;
+    return (
+      <div className="chat-sidebar-loading">Đang tải danh sách chat...</div>
+    );
   }
 
   if (error) {
@@ -276,7 +294,7 @@ const ChatSidebar: React.FC = () => {
       <div className="chat-list">
         {chatList.map((chat) => (
           <div
-            key={`${chat.isGroup ? 'group' : 'direct'}-${chat._id}`}
+            key={`${chat.isGroup ? "group" : "direct"}-${chat._id}`}
             className="chat-item"
             onClick={() => handleChatClick(chat)}
           >
@@ -294,13 +312,13 @@ const ChatSidebar: React.FC = () => {
             <div className="chat-info">
               <div className="chat-name">{chat.name}</div>
               <div className="chat-preview">
-                {chat.lastMessage 
-                  ? getLastMessagePreview(chat) 
-                  : chat.isGroup 
-                    ? "Không có tin nhắn" 
-                    : chat.isOnline 
-                      ? "Đang hoạt động" 
-                      : "Ngoại tuyến"}
+                {chat.lastMessage
+                  ? getLastMessagePreview(chat)
+                  : chat.isGroup
+                  ? "Không có tin nhắn"
+                  : chat.isOnline
+                  ? "Đang hoạt động"
+                  : "Ngoại tuyến"}
               </div>
             </div>
 
@@ -326,4 +344,4 @@ const ChatSidebar: React.FC = () => {
   );
 };
 
-export default ChatSidebar; 
+export default ChatSidebar;

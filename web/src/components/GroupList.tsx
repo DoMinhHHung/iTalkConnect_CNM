@@ -43,7 +43,7 @@ const GroupList: React.FC = () => {
 
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:3005/api/groups/user/groups",
+          "https://italkconnect-v3.onrender.com/api/groups/user/groups",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

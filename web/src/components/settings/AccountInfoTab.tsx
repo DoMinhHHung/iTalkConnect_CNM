@@ -97,7 +97,7 @@ const AccountInfoTab: React.FC<AccountInfoTabProps> = ({ user }) => {
       const token = localStorage.getItem("token");
       // Thay đổi endpoint để không va chạm với các route hiện tại
       const response = await axios.get(
-        "http://localhost:3005/api/auth/test/email-config",
+        "https://italkconnect-v3.onrender.com/api/auth/test/email-config",
         {
           headers: {
             Authorization: `Bearer ${token}`,

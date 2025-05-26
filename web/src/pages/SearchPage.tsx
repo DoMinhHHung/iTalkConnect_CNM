@@ -59,7 +59,7 @@ const SearchPage: React.FC = () => {
 
   // Connect user to socket with userId for private messages
   useEffect(() => {
-    const socketInstance = io.connect("http://localhost:3005");
+    const socketInstance = io.connect("https://italkconnect-v3.onrender.com");
     setSocket(socketInstance);
     if (currentUserId) {
       socketInstance.emit("joinUser", currentUserId);
@@ -101,7 +101,7 @@ const SearchPage: React.FC = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `http://localhost:3005/api/friendship/status/${userId}`,
+          `https://italkconnect-v3.onrender.com/api/friendship/status/${userId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -137,7 +137,7 @@ const SearchPage: React.FC = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `http://localhost:3005/api/search?q=${encodeURIComponent(
+          `https://italkconnect-v3.onrender.com/api/search?q=${encodeURIComponent(
             searchQuery
           )}&filter=${filter}`,
           {
@@ -272,7 +272,7 @@ const SearchPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:3005/api/friendship/send-request",
+        "https://italkconnect-v3.onrender.com/api/friendship/send-request",
         { recipientId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -304,7 +304,7 @@ const SearchPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `http://localhost:3005/api/friendship/request/${recipientId}`,
+        `https://italkconnect-v3.onrender.com/api/friendship/request/${recipientId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -324,7 +324,7 @@ const SearchPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `http://localhost:3005/api/friendship/unfriend/${friendId}`,
+        `https://italkconnect-v3.onrender.com/api/friendship/unfriend/${friendId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -342,7 +342,7 @@ const SearchPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:3005/api/friendship/accept-request",
+        "https://italkconnect-v3.onrender.com/api/friendship/accept-request",
         { friendshipId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -379,7 +379,7 @@ const SearchPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:3005/api/friendship/reject-request",
+        "https://italkconnect-v3.onrender.com/api/friendship/reject-request",
         { friendshipId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -517,7 +517,7 @@ const SearchPage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:3005/api/friendship/pending-requests",
+        "https://italkconnect-v3.onrender.com/api/friendship/pending-requests",
         {
           headers: { Authorization: `Bearer ${token}` },
         }

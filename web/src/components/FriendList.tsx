@@ -26,7 +26,7 @@ const FriendList: React.FC = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `http://localhost:3005/api/friendship`,
+          `https://italkconnect-v3.onrender.com/api/friendship`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

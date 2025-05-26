@@ -106,7 +106,7 @@ const CoAdminDialog: React.FC<CoAdminDialogProps> = ({
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:3005/api/groups/${groupId}`,
+        `https://italkconnect-v3.onrender.com/api/groups/${groupId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -197,7 +197,7 @@ const CoAdminDialog: React.FC<CoAdminDialogProps> = ({
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:3005/api/groups/add-co-admin`,
+        `https://italkconnect-v3.onrender.com/api/groups/add-co-admin`,
         {
           groupId,
           userId: memberId,
@@ -245,7 +245,7 @@ const CoAdminDialog: React.FC<CoAdminDialogProps> = ({
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://localhost:3005/api/groups/remove-co-admin`,
+        `https://italkconnect-v3.onrender.com/api/groups/remove-co-admin`,
         {
           groupId,
           userId: memberId,
