@@ -1,6 +1,13 @@
 import axios from "axios";
-import { CLOUDINARY_CONFIG, getAPIURL, API_URL, POSSIBLE_IPS, API_ENDPOINTS, getFallbackURL } from "../config/constants";
-import * as FileSystem from 'expo-file-system';
+import {
+  CLOUDINARY_CONFIG,
+  getAPIURL,
+  API_URL,
+  POSSIBLE_IPS,
+  API_ENDPOINTS,
+  getFallbackURL,
+} from "../config/constants";
+import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../config/constants";
 
@@ -24,15 +31,15 @@ export const uploadImageToCloudinary = async (
 
     // Get API URL properly as a string first
     let apiUrl = await getAPIURL();
-    
+
     // Additional validation to ensure we have a valid URL string
-    if (!apiUrl || typeof apiUrl !== 'string' || !apiUrl.startsWith('http')) {
+    if (!apiUrl || typeof apiUrl !== "string" || !apiUrl.startsWith("http")) {
       console.error("Invalid API URL detected:", apiUrl);
       // Fallback to URL from centralized config
       apiUrl = getFallbackURL();
       console.log("Using fallback API URL:", apiUrl);
     }
-    
+
     const uploadEndpoint = `${apiUrl}${API_ENDPOINTS.UPLOAD_CLOUDINARY}`;
     console.log("API URL:", uploadEndpoint);
 
@@ -130,59 +137,64 @@ export const uploadImage = async (
 ): Promise<any> => {
   try {
     console.log("Starting image upload with URI:", imageUri.substring(0, 50));
-    
+
     // 1. Get auth token
     const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    
-    // 2. Get base API URL 
+
+    // 2. Get base API URL
     const savedApiUrl = await AsyncStorage.getItem(STORAGE_KEYS.API_IP);
     // Fix: Make sure to await getAPIURL() since it returns a Promise
-    let apiUrl = savedApiUrl || await getAPIURL();
-    
+    let apiUrl = savedApiUrl || (await getAPIURL());
+
     // Additional validation to ensure we have a valid URL string
-    if (!apiUrl || typeof apiUrl !== 'string' || !apiUrl.startsWith('http')) {
+    if (!apiUrl || typeof apiUrl !== "string" || !apiUrl.startsWith("http")) {
       console.error("Invalid API URL detected:", apiUrl);
       // Fallback to URL from centralized config
       apiUrl = getFallbackURL();
       console.log("Using fallback API URL:", apiUrl);
     }
-    
+
     console.log(`Using API URL: ${apiUrl}`);
 
     // Try converting to base64 and sending that way first (most reliable)
     try {
       console.log("Attempting to upload as base64...");
       const mimeType = imageUri.endsWith(".png") ? "image/png" : "image/jpeg";
-      const base64 = await FileSystem.readAsStringAsync(imageUri, { 
-        encoding: FileSystem.EncodingType.Base64 
+      const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
       });
       const formattedBase64 = `data:${mimeType};base64,${base64}`;
-      
+
       // Send as JSON with base64 data
       const uploadEndpoint = `${apiUrl}${API_ENDPOINTS.UPLOAD_CLOUDINARY}`;
       const response = await axios.post(
         uploadEndpoint,
         {
           image: formattedBase64,
-          folder: CLOUDINARY_CONFIG.FOLDER
+          folder: CLOUDINARY_CONFIG.FOLDER,
         },
         {
           headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           timeout: 30000,
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total && onProgress) {
-              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              const percentCompleted = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
               onProgress(percentCompleted);
             }
-          }
+          },
         }
       );
-      
+
       if (response.data && (response.data.url || response.data.file?.fileUrl)) {
-        console.log("Base64 upload successful:", response.data.url || response.data.file?.fileUrl);
+        console.log(
+          "Base64 upload successful:",
+          response.data.url || response.data.file?.fileUrl
+        );
         return {
           secure_url: response.data.url || response.data.file?.fileUrl,
           bytes: response.data.size || response.data.file?.fileSize || 0,
@@ -194,30 +206,30 @@ export const uploadImage = async (
       console.log("Base64 upload failed:", base64Error);
       // Continue to FormData method if base64 fails
     }
-    
+
     // Try FormData upload as fallback
     try {
       console.log("Attempting FormData upload...");
-      
+
       // Create form data
       const formData = new FormData();
       const fileName = imageUri.split("/").pop() || "image.jpg";
       const mimeType = imageUri.endsWith(".png") ? "image/png" : "image/jpeg";
-      
+
       formData.append("file", {
         uri: imageUri,
         name: fileName,
         type: mimeType,
       } as any);
-      
+
       const headers: any = {
         "Content-Type": "multipart/form-data",
       };
-      
+
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
-      
+
       const response = await axios.post(
         `${apiUrl}/api/chat/upload-cloudinary`,
         formData,
@@ -226,13 +238,15 @@ export const uploadImage = async (
           timeout: 30000,
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total && onProgress) {
-              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              const percentCompleted = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
               onProgress(percentCompleted);
             }
-          }
+          },
         }
       );
-      
+
       if (response.data && response.data.file) {
         console.log("FormData upload successful:", response.data.file.fileUrl);
         return {
@@ -250,7 +264,9 @@ export const uploadImage = async (
     // If all methods fail, try direct Cloudinary upload
     console.log("Attempting direct Cloudinary upload as last resort...");
     try {
-      const base64 = await FileSystem.readAsStringAsync(imageUri, { encoding: FileSystem.EncodingType.Base64 });
+      const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
       return await uploadDirectToCloudinary(base64);
     } catch (cloudinaryError) {
       console.error("Direct Cloudinary upload failed:", cloudinaryError);
@@ -283,22 +299,27 @@ export const uploadFile = async (
   try {
     console.log("Starting file upload with URI:", fileUri);
     console.log("File info:", fileInfo);
-    
+
     // For videos and large files, use a more reliable upload approach
-    const isVideo = fileInfo.type.includes('video') || 
-                   (fileInfo.name && fileInfo.name.match(/\.(mp4|mov|avi|wmv|flv|mkv)$/i));
+    const isVideo =
+      fileInfo.type.includes("video") ||
+      (fileInfo.name && fileInfo.name.match(/\.(mp4|mov|avi|wmv|flv|mkv)$/i));
     const isLargeFile = fileInfo.size > 5 * 1024 * 1024; // 5MB threshold
-    
+
     if (isVideo || isLargeFile) {
-      console.log(`Processing ${isVideo ? 'video' : 'large'} file (${Math.round(fileInfo.size/1024/1024)}MB)...`);
+      console.log(
+        `Processing ${isVideo ? "video" : "large"} file (${Math.round(
+          fileInfo.size / 1024 / 1024
+        )}MB)...`
+      );
       return await uploadLargeFile(fileUri, fileInfo, token, onProgress);
     }
 
     // CRITICAL FIX: Get API URL properly as it returns a Promise
     let apiUrl = await getAPIURL();
-    
+
     // Additional validation to ensure we have a valid URL string
-    if (!apiUrl || typeof apiUrl !== 'string' || !apiUrl.startsWith('http')) {
+    if (!apiUrl || typeof apiUrl !== "string" || !apiUrl.startsWith("http")) {
       console.error("Invalid API URL detected:", apiUrl);
       // Fallback to URL from centralized config
       apiUrl = getFallbackURL();
@@ -317,25 +338,23 @@ export const uploadFile = async (
 
       const uploadEndpoint = `${apiUrl}${API_ENDPOINTS.UPLOAD_CLOUDINARY}`;
       console.log("Uploading with FormData to:", uploadEndpoint);
-      
+
       // Upload with standard axios
-      const response = await axios.post(
-        uploadEndpoint,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-          timeout: 30000,
-          onUploadProgress: (progressEvent) => {
-            if (progressEvent.total && onProgress) {
-              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              onProgress(percentCompleted);
-            }
-          },
-        }
-      );
+      const response = await axios.post(uploadEndpoint, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+        timeout: 30000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total && onProgress) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onProgress(percentCompleted);
+          }
+        },
+      });
 
       console.log("Upload response:", response.data);
       return response.data.file;
@@ -368,9 +387,11 @@ export const uploadFile = async (
     );
 
     console.log("FileSystem upload response status:", response.status);
-    
+
     if (response.status !== 200) {
-      const error = response.body ? JSON.parse(response.body) : { message: "Unknown error" };
+      const error = response.body
+        ? JSON.parse(response.body)
+        : { message: "Unknown error" };
       throw new Error(error.message || "Upload failed");
     }
 
@@ -399,32 +420,40 @@ const uploadLargeFile = async (
 ): Promise<any> => {
   try {
     console.log("Starting large file upload process...");
-    
+
     // CRITICAL FIX: Get API URL properly as it returns a Promise
     let apiUrl = await getAPIURL();
-    
+
     // Additional validation to ensure we have a valid URL string
-    if (!apiUrl || typeof apiUrl !== 'string' || !apiUrl.startsWith('http')) {
+    if (!apiUrl || typeof apiUrl !== "string" || !apiUrl.startsWith("http")) {
       console.error("Invalid API URL detected:", apiUrl);
       // Fallback to URL from centralized config
       apiUrl = getFallbackURL();
       console.log("Using fallback API URL:", apiUrl);
     }
-    
+
     // Determine if it's a video and file size - use this for adjusting settings
-    const isVideo = fileInfo.type.includes('video') || 
-                   (fileInfo.name && fileInfo.name.match(/\.(mp4|mov|avi|wmv|flv|mkv)$/i));
-    const fileSizeMB = Math.round(fileInfo.size/1024/1024);
-    
+    const isVideo =
+      fileInfo.type.includes("video") ||
+      (fileInfo.name && fileInfo.name.match(/\.(mp4|mov|avi|wmv|flv|mkv)$/i));
+    const fileSizeMB = Math.round(fileInfo.size / 1024 / 1024);
+
     // Adjust timeout based on file size - give more time for larger files
     // 2 minutes base + 30 seconds per MB, with max of 10 minutes
     const timeoutBase = 2 * 60 * 1000; // 2 minutes base
     const timeoutPerMB = 30 * 1000; // 30 seconds per MB
     const maxTimeout = 10 * 60 * 1000; // Max 10 minutes
-    const calculatedTimeout = Math.min(timeoutBase + (fileSizeMB * timeoutPerMB), maxTimeout);
-    
-    console.log(`Setting timeout to ${calculatedTimeout/1000} seconds for ${fileSizeMB}MB ${isVideo ? 'video' : 'file'}`);
-    
+    const calculatedTimeout = Math.min(
+      timeoutBase + fileSizeMB * timeoutPerMB,
+      maxTimeout
+    );
+
+    console.log(
+      `Setting timeout to ${
+        calculatedTimeout / 1000
+      } seconds for ${fileSizeMB}MB ${isVideo ? "video" : "file"}`
+    );
+
     // Use FormData with special configuration for large files
     const formData = new FormData();
     formData.append("file", {
@@ -437,54 +466,64 @@ const uploadLargeFile = async (
     formData.append("fileSize", fileInfo.size.toString());
     formData.append("fileType", isVideo ? "video" : fileInfo.type);
     formData.append("isLargeFile", "true");
-    
+
     // For videos, request chunked upload explicitly
     if (isVideo) {
       formData.append("useChunkedUpload", "true");
       formData.append("chunkSize", "6000000"); // 6MB chunks
     }
-    
+
     // Log the upload attempt with properly resolved URL
-    console.log(`Uploading large file to ${apiUrl}/api/chat/upload-cloudinary with ${calculatedTimeout}ms timeout`);
-    
+    console.log(
+      `Uploading large file to ${apiUrl}/api/chat/upload-cloudinary with ${calculatedTimeout}ms timeout`
+    );
+
     // Add fallback URLs in case the primary one fails
-    const fallbackUrls = POSSIBLE_IPS.map(ip => `http://${ip}:3005`);
-    
+    const fallbackUrls = POSSIBLE_IPS;
+
     // Implement retry mechanism with fallback URLs
     let attempts = 0;
     const maxAttempts = 3;
     let lastError = null;
     let currentApiUrl = apiUrl;
-    
+
     while (attempts < maxAttempts) {
       attempts++;
       try {
-        console.log(`Upload attempt ${attempts}/${maxAttempts} to ${currentApiUrl}/api/chat/upload-cloudinary`);
-        
+        console.log(
+          `Upload attempt ${attempts}/${maxAttempts} to ${currentApiUrl}/api/chat/upload-cloudinary`
+        );
+
         // Reset progress for new attempts
         if (attempts > 1 && onProgress) {
           onProgress(0);
         }
-        
+
         // Calculate timeout for this attempt (increase with each retry)
         const attemptTimeout = calculatedTimeout * (1 + (attempts - 1) * 0.5);
-        console.log(`Using timeout of ${Math.round(attemptTimeout/1000)} seconds for attempt ${attempts}`);
-        
+        console.log(
+          `Using timeout of ${Math.round(
+            attemptTimeout / 1000
+          )} seconds for attempt ${attempts}`
+        );
+
         const response = await axios.post(
           `${currentApiUrl}/api/chat/upload-cloudinary`,
           formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
-              "Authorization": `Bearer ${token}`,
-              "Connection": "keep-alive",
+              Authorization: `Bearer ${token}`,
+              Connection: "keep-alive",
             },
             timeout: attemptTimeout,
             maxContentLength: 100 * 1024 * 1024,
             maxBodyLength: 100 * 1024 * 1024,
             onUploadProgress: (progressEvent) => {
               if (progressEvent.total && onProgress) {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                const percentCompleted = Math.round(
+                  (progressEvent.loaded * 100) / progressEvent.total
+                );
                 onProgress(percentCompleted);
                 if (percentCompleted % 10 === 0) {
                   console.log(`Upload progress: ${percentCompleted}%`);
@@ -499,30 +538,36 @@ const uploadLargeFile = async (
       } catch (error: any) {
         lastError = error;
         console.error(`Attempt ${attempts} failed:`, error.message);
-        
+
         // Check if this error is retryable
-        const isNetworkError = !error.response && error.message && (
-          error.message.includes('timeout') || 
-          error.message.includes('network') ||
-          error.code === 'ECONNABORTED'
-        );
-        
+        const isNetworkError =
+          !error.response &&
+          error.message &&
+          (error.message.includes("timeout") ||
+            error.message.includes("network") ||
+            error.code === "ECONNABORTED");
+
         const isServerError = error.response && error.response.status >= 500;
-        
+
         if ((isNetworkError || isServerError) && attempts < maxAttempts) {
           // Before next attempt, try a different API URL if available
           if (fallbackUrls.length > 0 && attempts <= fallbackUrls.length) {
             // Pick a fallback URL different from current
             const fallbackIndex = attempts - 1;
-            if (fallbackIndex < fallbackUrls.length && fallbackUrls[fallbackIndex] !== currentApiUrl) {
+            if (
+              fallbackIndex < fallbackUrls.length &&
+              fallbackUrls[fallbackIndex] !== currentApiUrl
+            ) {
               currentApiUrl = fallbackUrls[fallbackIndex];
               console.log(`Switching to fallback URL: ${currentApiUrl}`);
             }
           }
-          
+
           const delayMs = 2000 * attempts; // Increasing delay between attempts
-          console.log(`Retryable error detected. Waiting ${delayMs}ms before next attempt...`);
-          await new Promise(resolve => setTimeout(resolve, delayMs));
+          console.log(
+            `Retryable error detected. Waiting ${delayMs}ms before next attempt...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
           // Continue to next attempt
         } else {
           // Non-retryable error or max attempts reached
@@ -530,27 +575,38 @@ const uploadLargeFile = async (
         }
       }
     }
-    
+
     // If we get here, all attempts failed
     console.error(`All ${maxAttempts} upload attempts failed.`);
-    
+
     // As a last resort for videos, try alternative approach based on file size
     if (isVideo && fileSizeMB > 5) {
       console.log("Trying alternative approach for large video...");
-      return await tryAlternativeVideoUpload(fileUri, fileInfo, token, onProgress);
+      return await tryAlternativeVideoUpload(
+        fileUri,
+        fileInfo,
+        token,
+        onProgress
+      );
     }
-    
+
     // Provide detailed error information
     if (lastError) {
       if (lastError.response) {
         console.error("Server responded with:", {
           status: lastError.response.status,
-          data: lastError.response.data
+          data: lastError.response.data,
         });
-        throw new Error(`Server error ${lastError.response.status}: ${JSON.stringify(lastError.response.data)}`);
+        throw new Error(
+          `Server error ${lastError.response.status}: ${JSON.stringify(
+            lastError.response.data
+          )}`
+        );
       } else if (lastError.request) {
         console.error("No response received from server");
-        throw new Error(`Upload failed after ${maxAttempts} attempts. Check your internet connection and try again with a smaller file or better connection.`);
+        throw new Error(
+          `Upload failed after ${maxAttempts} attempts. Check your internet connection and try again with a smaller file or better connection.`
+        );
       } else {
         throw lastError;
       }
@@ -580,14 +636,16 @@ const tryAlternativeVideoUpload = async (
   try {
     console.log("Using alternative chunked upload method for video...");
     onProgress && onProgress(0);
-    
+
     // Thay vì dùng upload trực tiếp, hãy thử tách video thành các đoạn nhỏ và upload từng phần
     // Đây là video, nên chúng ta chỉ gửi thông tin đến server và để server xử lý
-    
+
     // Lấy API URL đúng cách
     const apiUrl = await getAPIURL();
-    console.log(`Using alternative upload URL: ${apiUrl}/api/chat/video-upload`);
-    
+    console.log(
+      `Using alternative upload URL: ${apiUrl}/api/chat/video-upload`
+    );
+
     // Tạo form data với thông tin để server có thể xử lý đặc biệt cho video
     const formData = new FormData();
     formData.append("file", {
@@ -595,12 +653,12 @@ const tryAlternativeVideoUpload = async (
       name: fileInfo.name || "video.mp4",
       type: getMimeType(fileInfo.type || "video"),
     } as any);
-    
+
     // Thêm metadata cho server
     formData.append("useAlternativeMethod", "true");
     formData.append("fileType", "video");
     formData.append("fileSize", fileInfo.size.toString());
-    
+
     // Tạo request
     const response = await axios.post(
       `${apiUrl}/api/chat/upload-cloudinary`, // Dùng cùng endpoint
@@ -608,23 +666,25 @@ const tryAlternativeVideoUpload = async (
       {
         headers: {
           "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${token}`,
-          "Connection": "keep-alive",
+          Authorization: `Bearer ${token}`,
+          Connection: "keep-alive",
           "X-Alternative-Method": "true", // Thêm header để server biết đây là phương pháp thay thế
         },
         timeout: 5 * 60 * 1000, // 5 phút
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total && onProgress) {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
             onProgress(percentCompleted);
             console.log(`Alternative upload progress: ${percentCompleted}%`);
           }
         },
       }
     );
-    
+
     console.log("Alternative upload method successful:", response.status);
-    
+
     if (response.data && response.data.file) {
       return response.data.file;
     } else {
@@ -633,15 +693,15 @@ const tryAlternativeVideoUpload = async (
     }
   } catch (firstError) {
     console.error("Alternative method also failed:", firstError);
-    
+
     // Thử một endpoint khác nếu có thể - endpoing dự phòng
     try {
       console.log("Trying backup endpoint for video upload...");
       onProgress && onProgress(0);
-      
+
       // Lấy API URL đúng cách
       const apiUrl = await getAPIURL();
-      
+
       // Tạo FormData
       const formData = new FormData();
       formData.append("file", {
@@ -649,12 +709,12 @@ const tryAlternativeVideoUpload = async (
         name: fileInfo.name || "video.mp4",
         type: getMimeType(fileInfo.type || "video"),
       } as any);
-      
+
       // Thêm metadata
       formData.append("fileType", "video");
       formData.append("fileSize", fileInfo.size.toString());
       formData.append("isEmergencyUpload", "true");
-      
+
       // Thử với endpoint test-cloudinary-upload (không cần auth) nếu có
       const response = await axios.post(
         `${apiUrl}/api/chat/test-cloudinary-upload`,
@@ -666,16 +726,18 @@ const tryAlternativeVideoUpload = async (
           timeout: 5 * 60 * 1000,
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total && onProgress) {
-              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              const percentCompleted = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
               onProgress(percentCompleted);
               console.log(`Backup upload progress: ${percentCompleted}%`);
             }
           },
         }
       );
-      
+
       console.log("Backup upload successful:", response.status);
-      
+
       if (response.data && response.data.file) {
         return response.data.file;
       } else if (response.data && response.data.url) {
@@ -693,7 +755,9 @@ const tryAlternativeVideoUpload = async (
       }
     } catch (backupError) {
       console.error("All alternative methods failed:", backupError);
-      throw new Error("Tất cả phương pháp tải lên video đều thất bại. Vui lòng thử video có kích thước nhỏ hơn hoặc kiểm tra kết nối.");
+      throw new Error(
+        "Tất cả phương pháp tải lên video đều thất bại. Vui lòng thử video có kích thước nhỏ hơn hoặc kiểm tra kết nối."
+      );
     }
   }
 };
@@ -751,7 +815,7 @@ export const optimizeImage = async (
     //   { compress: quality, format: ImageManipulator.SaveFormat.JPEG }
     // );
     // return manipulateResult.uri;
-    
+
     // For now, just return the original URI
     return uri;
   } catch (error) {

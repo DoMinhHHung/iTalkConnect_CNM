@@ -1,19 +1,25 @@
 {
   "expo": {
-    "extra": {
-      "eas": {
-        "projectId": "7c904631-22d8-43d0-b7d5-d5aa7573845b"
-      }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/7c904631-22d8-43d0-b7d5-d5aa7573845b"
+    "name": "iTalkConnect Mobile",
+    "slug": "italkconnect-mobile",
+    "version": "1.0.2",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
     },
     "android": {
       "package": "com.minhhung0403.italkmobile"
     },
-    "ios": {}
+    "extra": {
+      "eas": {
+        "apiUrl": "https://italkconnect-v3.onrender.com",
+        "projectId": "8023279a-147b-48c4-89c4-997d92557b46"
+      }
+    },
+    "owner": "minhhung0403"
   }
 }

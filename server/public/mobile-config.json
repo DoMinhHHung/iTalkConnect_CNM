@@ -1,28 +1,28 @@
 {
   "timestamp": "2025-05-06T15:39:44.593Z",
   "serverVersion": "1.0.0",
-  "serverPort": "3005",
+  "serverPort": "443",
   "interfaces": [
     {
-      "name": "Wi-Fi",
-      "address": "192.168.1.7",
-      "url": "http://192.168.1.7:3005",
-      "ws": "ws://192.168.1.7:3005"
+      "name": "Render Server",
+      "address": "italkconnect-v3.onrender.com",
+      "url": "https://italkconnect-v3.onrender.com",
+      "ws": "wss://italkconnect-v3.onrender.com"
     }
   ],
   "loopback": {
-    "address": "127.0.0.1",
-    "url": "http://127.0.0.1:3005",
-    "ws": "ws://127.0.0.1:3005"
+    "address": "italkconnect-v3.onrender.com",
+    "url": "https://italkconnect-v3.onrender.com",
+    "ws": "wss://italkconnect-v3.onrender.com"
   },
   "emulator": {
-    "address": "10.0.2.2",
-    "url": "http://10.0.2.2:3005",
-    "ws": "ws://10.0.2.2:3005"
+    "address": "italkconnect-v3.onrender.com",
+    "url": "https://italkconnect-v3.onrender.com",
+    "ws": "wss://italkconnect-v3.onrender.com"
   },
   "recommandedUrls": {
-    "android": "http://192.168.1.7:3005",
-    "ios": "http://192.168.1.7:3005",
-    "web": "http://192.168.1.7:3005"
+    "android": "https://italkconnect-v3.onrender.com",
+    "ios": "https://italkconnect-v3.onrender.com",
+    "web": "https://italkconnect-v3.onrender.com"
   }
 }

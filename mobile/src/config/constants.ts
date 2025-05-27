@@ -12,14 +12,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // - 127.0.0.1: localhost
 
 // Danh sách các IP phổ biến có thể thử kết nối (theo thứ tự ưu tiên)
-export const POSSIBLE_IPS = [
-  "192.168.1.7", // IP hiện tại của máy
-  "192.168.1.3", // IP dự phòng
-  // "192.168.1.2", // IP thay thế 2
-];
+export const POSSIBLE_IPS = ["italkconnect-v3.onrender.com"];
 
 // Cổng API mặc định
-export const API_PORT = "3005";
+export const API_PORT = "https://italkconnect-v3.onrender.com";
 
 // Định nghĩa các endpoint thường dùng
 export const API_ENDPOINTS = {
@@ -81,9 +77,14 @@ const getHostAddress = () => {
   return "localhost";
 };
 
-// Khởi tạo API URL với IP đầu tiên
+// Khởi tạo API URL với URL Render
 export let API_URL = "https://italkconnect-v3.onrender.com";
 console.log(`Khởi tạo API_URL: ${API_URL}`);
+
+// Hàm để lấy API_URL hiện tại
+export const getAPIURL = async (forceRefresh = false) => {
+  return API_URL;
+};
 
 // Hàm để lấy URL thay thế dựa trên index
 export const getAlternativeAPI = (index: number): string | null => {
@@ -173,22 +174,6 @@ export const testAndSetAPIConnection = async (forceRefresh = false) => {
 testAndSetAPIConnection().then(() => {
   console.log(`Using API URL: ${API_URL}`);
 });
-
-// Hàm để lấy API_URL hiện tại hoặc thử lại kết nối
-export const getAPIURL = async (forceRefresh = false) => {
-  if (forceRefresh) {
-    await testAndSetAPIConnection(true);
-  }
-
-  // Luôn trả về chuỗi hoàn chỉnh để tránh lỗi [object Object]
-  if (!API_URL || typeof API_URL !== "string" || !API_URL.startsWith("http")) {
-    // Fallback to hardcoded URL if API_URL is invalid
-    console.error("Invalid API_URL detected:", API_URL);
-    return `http://${POSSIBLE_IPS[0]}:${API_PORT}`;
-  }
-
-  return API_URL;
-};
 
 // Hàm tạo URL đầy đủ cho các endpoint API
 export const getEndpointURL = async (endpoint: string): Promise<string> => {
