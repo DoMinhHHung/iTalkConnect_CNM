@@ -82,7 +82,6 @@ const RegisterPage: React.FC = () => {
         gender: registerData.gender as "male" | "female",
       });
 
-      // Không tự động chuyển hướng nữa
       dispatch(
         registerSuccess({
           user: response.user,
@@ -90,6 +89,9 @@ const RegisterPage: React.FC = () => {
         })
       );
       setSuccess("Đăng ký thành công!");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Đăng ký thất bại");
       dispatch(authError(err.response?.data?.message || "Đăng ký thất bại"));
