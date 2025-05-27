@@ -169,15 +169,6 @@ const LoginPage: React.FC = () => {
           <span className="divider-text">hoặc</span>
         </div>
 
-        <div className="social-login">
-          <button className="social-btn">
-            <i className="fa fa-google"></i> Google
-          </button>
-          <button className="social-btn">
-            <i className="fa fa-facebook"></i> Facebook
-          </button>
-        </div>
-
         <div className="auth-links">
           <p className="mb-2">
             Chưa có tài khoản?{" "}
