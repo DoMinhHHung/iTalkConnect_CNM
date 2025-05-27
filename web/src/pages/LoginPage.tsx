@@ -73,8 +73,6 @@ const LoginPage: React.FC = () => {
     dispatch(authLoading());
 
     try {
-      setDebugInfo(`Đang gửi request đăng nhập với: ${formData.emailOrPhone}`);
-
       const response = await loginUser(formData);
 
       if (!response || !response.token || !response.user) {
@@ -87,8 +85,6 @@ const LoginPage: React.FC = () => {
           token: response.token,
         })
       );
-
-      setDebugInfo("Đăng nhập thành công, đang chuyển hướng...");
 
       setTimeout(() => {
         navigate("/");
