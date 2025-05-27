@@ -12,10 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // - 127.0.0.1: localhost
 
 // Danh sách các IP phổ biến có thể thử kết nối (theo thứ tự ưu tiên)
-export const POSSIBLE_IPS = ["italkconnect-v3.onrender.com"];
-
-// Cổng API mặc định
-export const API_PORT = "https://italkconnect-v3.onrender.com";
+export const POSSIBLE_IPS = ["https://italkconnect-v3.onrender.com"];
 
 // Định nghĩa các endpoint thường dùng
 export const API_ENDPOINTS = {
@@ -30,150 +27,29 @@ export const API_ENDPOINTS = {
   FRIENDSHIP: "/api/friendship",
 };
 
-// Hàm lấy IP đã lưu hoặc IP mặc định
-const getStoredOrDefaultIp = async () => {
-  try {
-    // Thử lấy IP đã lưu
-    const storedIp = await AsyncStorage.getItem("API_IP");
-    if (storedIp) {
-      // Kiểm tra nếu IP đã lưu vẫn nằm trong danh sách IP khả dụng
-      if (POSSIBLE_IPS.includes(storedIp)) {
-        return storedIp;
-      }
-    }
-  } catch (error) {
-    console.log("Lỗi khi lấy IP đã lưu:", error);
-  }
-
-  // Nếu không có IP đã lưu hoặc IP đã lưu không còn hợp lệ, trả về IP đầu tiên
-  return POSSIBLE_IPS[0];
-};
-
-// Biến toàn cục để theo dõi IP hiện tại
-let currentIpIndex = 0;
-
-const getHostAddress = () => {
-  if (Platform.OS === "android") {
-    // Cho Android emulator, sử dụng 10.0.2.2 để truy cập localhost của máy host
-    if (__DEV__ && Platform.constants.uiMode?.includes("simulator")) {
-      return "10.0.2.2";
-    }
-
-    // Cho thiết bị Android thật, thử các IP trong mạng LAN
-    return POSSIBLE_IPS[currentIpIndex]; // Sử dụng IP theo index hiện tại
-  }
-
-  if (Platform.OS === "ios") {
-    // Cho iOS simulator
-    if (__DEV__) {
-      return "localhost";
-    }
-
-    // Cho thiết bị iOS thật, thử các IP trong mạng LAN
-    return POSSIBLE_IPS[currentIpIndex];
-  }
-
-  // Fallback cho web hoặc các nền tảng khác
-  return "localhost";
-};
-
 // Khởi tạo API URL với URL Render
 export let API_URL = "https://italkconnect-v3.onrender.com";
 console.log(`Khởi tạo API_URL: ${API_URL}`);
 
 // Hàm để lấy API_URL hiện tại
-export const getAPIURL = async (forceRefresh = false) => {
-  return API_URL;
-};
+export const getAPIURL = async () => API_URL;
 
-// Hàm để lấy URL thay thế dựa trên index
-export const getAlternativeAPI = (index: number): string | null => {
-  if (index >= 0 && index < POSSIBLE_IPS.length) {
-    return `http://${POSSIBLE_IPS[index]}:${API_PORT}`;
-  }
-  return null;
-};
-
-// Hàm để kiểm tra kết nối API và thay đổi IP nếu cần
-export const testAndSetAPIConnection = async (forceRefresh = false) => {
-  // Khởi tạo với IP đã lưu, trừ khi forceRefresh = true
-  if (!forceRefresh) {
-    const storedIp = await getStoredOrDefaultIp();
-    currentIpIndex = POSSIBLE_IPS.indexOf(storedIp);
-    if (currentIpIndex === -1) currentIpIndex = 0;
-    API_URL = `http://${POSSIBLE_IPS[currentIpIndex]}:${API_PORT}`;
-  }
-
-  console.log(`Testing current API URL: ${API_URL}`);
-
-  // Thử kết nối với API hiện tại
+// Hàm test connection (nếu cần)
+export const testAndSetAPIConnection = async () => {
   try {
     const response = await axios.get(`${API_URL}/api/health`, {
       timeout: 3000,
-      headers: {
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
     });
-
     if (response.status === 200) {
       console.log(`API connection test successful to ${API_URL}/api/health`);
-      // Lưu IP thành công vào AsyncStorage
-      await AsyncStorage.setItem("API_IP", POSSIBLE_IPS[currentIpIndex]);
       return true;
     }
   } catch (error) {
     console.log(`API connection test failed for ${API_URL}:`, error.message);
-
-    // Thử các IP khác nếu IP hiện tại thất bại
-    let found = false;
-    for (let i = 0; i < POSSIBLE_IPS.length; i++) {
-      if (i === currentIpIndex) continue; // Bỏ qua IP hiện tại
-
-      const testUrl = `http://${POSSIBLE_IPS[i]}:${API_PORT}`;
-      try {
-        console.log(`Trying alternative IP: ${testUrl}`);
-        const altResponse = await axios.get(`${testUrl}/api/health`, {
-          timeout: 3000,
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-        });
-
-        if (altResponse.status === 200) {
-          console.log(`Found working API at ${testUrl}`);
-          currentIpIndex = i;
-          API_URL = testUrl;
-          // Lưu IP thành công vào AsyncStorage
-          await AsyncStorage.setItem("API_IP", POSSIBLE_IPS[i]);
-          found = true;
-          break;
-        }
-      } catch (altError) {
-        console.log(`Alternative IP ${testUrl} failed:`, altError.message);
-      }
-    }
-
-    if (!found) {
-      console.log(
-        "All API connections failed, sticking with current URL:",
-        API_URL
-      );
-      return false;
-    }
+    return false;
   }
-
-  console.log(`Current API URL works: ${API_URL}`);
   return true;
 };
-
-// Khởi chạy kiểm tra kết nối khi import module
-testAndSetAPIConnection().then(() => {
-  console.log(`Using API URL: ${API_URL}`);
-});
 
 // Hàm tạo URL đầy đủ cho các endpoint API
 export const getEndpointURL = async (endpoint: string): Promise<string> => {
@@ -206,10 +82,8 @@ export const getAPIEndpoint = async (
 
 // Hàm trả về fallback URL để tránh hardcoding
 export const getFallbackURL = (endpoint?: string): string => {
-  const baseUrl = `http://${POSSIBLE_IPS[0]}:${API_PORT}`;
+  const baseUrl = API_URL;
   if (!endpoint) return baseUrl;
-
-  // Đảm bảo không có dấu / trùng lặp
   if (endpoint.startsWith("/") && baseUrl.endsWith("/")) {
     return `${baseUrl}${endpoint.substring(1)}`;
   }
@@ -224,7 +98,7 @@ export const getSocketURL = () => {
   // Đảm bảo trả về một chuỗi hợp lệ
   if (!API_URL || typeof API_URL !== "string" || !API_URL.startsWith("http")) {
     console.error("Invalid API_URL for socket:", API_URL);
-    return `http://${POSSIBLE_IPS[0]}:${API_PORT}`;
+    return `https://italkconnect-v3.onrender.com`;
   }
   return API_URL;
 };
@@ -239,7 +113,7 @@ export const STORAGE_KEYS = {
   USER: "user",
   THEME: "app_theme",
   LANGUAGE: "app_language",
-  API_IP: "api_ip", // Thêm khóa lưu IP đang sử dụng
+  API_IP: "api_ip",
 };
 
 // Default avatar
