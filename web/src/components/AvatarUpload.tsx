@@ -40,7 +40,15 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     console.log("File change handler triggered", e.target.files);
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      console.log("Selected file:", file.name, "Size:", Math.round(file.size / 1024), "KB", "Type:", file.type);
+      console.log(
+        "Selected file:",
+        file.name,
+        "Size:",
+        Math.round(file.size / 1024),
+        "KB",
+        "Type:",
+        file.type
+      );
 
       // Kiểm tra kích thước file (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
@@ -88,8 +96,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
     try {
       // Kiểm tra kích thước file trước khi đọc
-      if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
-        setError("Kích thước file quá lớn (tối đa 5MB). Vui lòng chọn file nhỏ hơn.");
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        setError(
+          "Kích thước file quá lớn (tối đa 5MB). Vui lòng chọn file nhỏ hơn."
+        );
         setLoading(false);
         return;
       }
@@ -104,22 +115,29 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           // Upload image to Cloudinary first
           setSuccess("Đang tải ảnh lên Cloudinary...");
           console.log("Uploading avatar to Cloudinary...");
-          console.log("File size before processing:", Math.round(base64Image.length / 1024), "KB");
-          
-          const cloudinaryUrl = await uploadImageToCloudinary(base64Image, "italk_app/avatars");
-          
+          console.log(
+            "File size before processing:",
+            Math.round(base64Image.length / 1024),
+            "KB"
+          );
+
+          const cloudinaryUrl = await uploadImageToCloudinary(
+            base64Image,
+            "italk_app/avatars"
+          );
+
           console.log("Cloudinary upload successful:", cloudinaryUrl);
           setSuccess("Đang cập nhật thông tin người dùng...");
           console.log("Updating avatar for userId:", actualUserId);
-          
+
           // Update the avatar URL in the database
           const updatedUser = await uploadAvatar(actualUserId, cloudinaryUrl);
-          
+
           // Update Redux state
           dispatch(updateUserSuccess(updatedUser));
-          
+
           setSuccess("Avatar đã được cập nhật thành công");
-          
+
           // Call onSuccess callback if provided
           if (onSuccess) {
             onSuccess(cloudinaryUrl);
@@ -127,23 +145,28 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         } catch (uploadError: any) {
           console.error("Lỗi chi tiết:", uploadError);
           let errorMessage = "Có lỗi xảy ra khi upload avatar";
-          
+
           if (uploadError.message.includes("request entity too large")) {
-            errorMessage = "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn hoặc giảm kích thước ảnh.";
+            errorMessage =
+              "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn hoặc giảm kích thước ảnh.";
           } else if (uploadError.message.includes("timeout")) {
-            errorMessage = "Quá thời gian kết nối. Vui lòng thử lại hoặc chọn ảnh nhỏ hơn.";
+            errorMessage =
+              "Quá thời gian kết nối. Vui lòng thử lại hoặc chọn ảnh nhỏ hơn.";
           } else if (uploadError.message.includes("network")) {
-            errorMessage = "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.";
+            errorMessage =
+              "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.";
           } else if (uploadError.response) {
-            errorMessage = `Lỗi máy chủ: ${uploadError.response.status} - ${uploadError.response.data.message || uploadError.message}`;
+            errorMessage = `Lỗi máy chủ: ${uploadError.response.status} - ${
+              uploadError.response.data.message || uploadError.message
+            }`;
           }
-          
+
           setError(errorMessage);
         } finally {
           setLoading(false);
         }
       };
-      
+
       reader.onerror = (event) => {
         console.error("Lỗi khi đọc file:", event);
         setError("Không thể đọc file. Vui lòng thử lại với file khác.");
@@ -186,16 +209,16 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       imgTest.onload = async () => {
         try {
           console.log("Updating avatar URL for userId:", actualUserId);
-          
+
           // Cập nhật avatar trong database trực tiếp với URL đã cung cấp
           const updatedUser = await uploadAvatar(actualUserId, directUrl);
-          
+
           // Cập nhật state Redux
           dispatch(updateUserSuccess(updatedUser));
-          
+
           setSuccess("Avatar đã được cập nhật thành công");
           setPreviewUrl(directUrl);
-          
+
           // Gọi callback onSuccess nếu được cung cấp
           if (onSuccess) {
             onSuccess(directUrl);
@@ -321,7 +344,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
                 onClick={handleUpload}
                 disabled={loading}
               >
-                {loading ? "Đang xử lý..." : "Tải lên"}
+                {loading ? "Đang xử lý..." : "Cập nhật"}
               </button>
             )}
           </div>
