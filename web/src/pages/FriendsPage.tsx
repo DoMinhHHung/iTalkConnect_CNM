@@ -248,7 +248,6 @@ const FriendsPage: React.FC = () => {
     return (
       <div className="friends-list">
         {friends.map((friendship: Friend) => {
-          // Xác định thông tin người bạn (có thể là requester hoặc recipient)
           const currentUserId = user?._id;
           const friend =
             friendship.requester._id === currentUserId

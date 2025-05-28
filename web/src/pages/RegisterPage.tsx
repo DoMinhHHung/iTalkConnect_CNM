@@ -24,18 +24,56 @@ const RegisterPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const validatePassword = (password: string): boolean => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (password.length < minLength) {
+      setPasswordError("Mật khẩu phải có ít nhất 8 ký tự");
+      return false;
+    }
+    if (!hasUpperCase) {
+      setPasswordError("Mật khẩu phải có ít nhất 1 chữ hoa");
+      return false;
+    }
+    if (!hasLowerCase) {
+      setPasswordError("Mật khẩu phải có ít nhất 1 chữ thường");
+      return false;
+    }
+    if (!hasNumbers) {
+      setPasswordError("Mật khẩu phải có ít nhất 1 số");
+      return false;
+    }
+    if (!hasSpecialChar) {
+      setPasswordError("Mật khẩu phải có ít nhất 1 ký tự đặc biệt");
+      return false;
+    }
+
+    setPasswordError(null);
+    return true;
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    if (name === "password") {
+      validatePassword(value);
+    }
   };
 
   const handleRequestOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -65,6 +103,10 @@ const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!validatePassword(formData.password)) {
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Mật khẩu và xác nhận mật khẩu không khớp");
@@ -192,13 +234,18 @@ const RegisterPage: React.FC = () => {
                     <label htmlFor="password">Mật khẩu</label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${
+                        passwordError ? "is-invalid" : ""
+                      }`}
                       id="password"
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
                       required
                     />
+                    {passwordError && (
+                      <div className="invalid-feedback">{passwordError}</div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-6">

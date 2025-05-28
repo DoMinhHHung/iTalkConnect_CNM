@@ -118,7 +118,9 @@ interface GroupChatInterfaceProps {
   overrideGroupId?: string;
 }
 
-const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId }) => {
+const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({
+  overrideGroupId,
+}) => {
   const params = useParams<{ groupId: string }>();
   // Use the override if provided, otherwise use the URL parameter
   const groupId = overrideGroupId || params.groupId;
@@ -219,9 +221,9 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
       }`;
 
       // Also check if this is in our current messages list
-      const isDuplicate = messages.some(msg => 
-        msg._id === messageId || 
-        (msg.tempId && (msg.tempId === messageId))
+      const isDuplicate = messages.some(
+        (msg) =>
+          msg._id === messageId || (msg.tempId && msg.tempId === messageId)
       );
 
       if (
@@ -358,7 +360,11 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
           }
         );
 
-        if (roleResponse.data && roleResponse.data.success && roleResponse.data.role) {
+        if (
+          roleResponse.data &&
+          roleResponse.data.success &&
+          roleResponse.data.role
+        ) {
           setUserRole(roleResponse.data.role);
           console.log("User role set from API:", roleResponse.data.role);
         } else {
@@ -371,12 +377,16 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
           // Check if user is admin
           if (groupResponse.data.admin._id === user._id) {
             setUserRole("admin");
-          } 
+          }
           // Check if user is co-admin
-          else if (groupResponse.data.coAdmins && 
-                  groupResponse.data.coAdmins.some((admin: any) => admin._id === user._id)) {
+          else if (
+            groupResponse.data.coAdmins &&
+            groupResponse.data.coAdmins.some(
+              (admin: any) => admin._id === user._id
+            )
+          ) {
             setUserRole("coAdmin");
-          } 
+          }
           // Otherwise, user is a regular member
           else {
             setUserRole("member");
@@ -957,7 +967,8 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
   // Add an event handler to detect user scrolling
   const handleScroll = useCallback(() => {
     if (messagesContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const { scrollTop, scrollHeight, clientHeight } =
+        messagesContainerRef.current;
       // If user has scrolled up more than 100px, don't auto-scroll on new messages
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
       setShouldScrollToBottom(isNearBottom);
@@ -968,9 +979,9 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
+      container.addEventListener("scroll", handleScroll);
       return () => {
-        container.removeEventListener('scroll', handleScroll);
+        container.removeEventListener("scroll", handleScroll);
       };
     }
   }, [handleScroll]);
@@ -981,22 +992,24 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
     const filterLocallyDeletedMessages = () => {
       try {
         if (!user || !groupId) return;
-        
+
         const storageKey = `deleted_messages_${user._id}`;
         const deletedDataStr = localStorage.getItem(storageKey);
-        
+
         if (deletedDataStr) {
           const deletedMessages = JSON.parse(deletedDataStr);
-          
+
           // Get list of deleted message IDs for this group
           const deletedIds = deletedMessages[groupId] || [];
-          
+
           if (deletedIds.length > 0) {
             // Filter out any deleted messages
-            setMessages(prevMessages => 
-              prevMessages.filter(msg => !deletedIds.includes(msg._id))
+            setMessages((prevMessages) =>
+              prevMessages.filter((msg) => !deletedIds.includes(msg._id))
             );
-            console.log(`Filtered out ${deletedIds.length} locally deleted messages`);
+            console.log(
+              `Filtered out ${deletedIds.length} locally deleted messages`
+            );
           }
         }
       } catch (error) {
@@ -1243,10 +1256,10 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
       }
 
       const tempId = `temp_${Date.now()}`;
-      
+
       // Register this message ID to prevent duplicates
       registerMessageId(tempId, file.name, user._id);
-      
+
       // Add message to local state
       const newMessage: GroupMessage = {
         _id: tempId,
@@ -1262,9 +1275,9 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
         tempId: tempId,
         receiver: "", // Add required receiver property
       };
-      
+
       setMessages((prevMessages) => [...prevMessages, newMessage]);
-      
+
       // Emit message via socket - ONLY use sendGroupMessage to avoid duplicates
       let messageSent = false;
       if (socket && socket.connected) {
@@ -1279,29 +1292,32 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
             fileUrl: fileData.fileUrl,
             fileName: file.name,
             fileSize: file.size,
-            tempId: tempId
+            tempId: tempId,
           };
-          
+
           // Only emit with one event type to avoid duplicates
           socket.emit("sendGroupMessage", messageData);
-          
+
           messageSent = true;
         } catch (socketError) {
           console.error("Error sending via socket:", socketError);
         }
       }
-      
+
       // API fallback if socket fails
       if (!messageSent) {
         try {
-          await sendMessageViaAPI({
-            groupId: groupId,
-            content: file.name,
-            type: fileType,
-            fileUrl: fileData.fileUrl,
-            fileName: file.name,
-            fileSize: file.size
-          }, tempId);
+          await sendMessageViaAPI(
+            {
+              groupId: groupId,
+              content: file.name,
+              type: fileType,
+              fileUrl: fileData.fileUrl,
+              fileName: file.name,
+              fileSize: file.size,
+            },
+            tempId
+          );
         } catch (apiError) {
           console.error("API fallback failed:", apiError);
         }
@@ -1727,42 +1743,49 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
       const storageKey = `deleted_messages_${user._id}`;
       const existingDataStr = localStorage.getItem(storageKey);
       let deletedMessages = existingDataStr ? JSON.parse(existingDataStr) : {};
-      
+
       // Group deleted messages by group ID
       if (!deletedMessages[groupId]) {
         deletedMessages[groupId] = [];
       }
-      
+
       if (!deletedMessages[groupId].includes(selectedMessageForDelete._id)) {
         deletedMessages[groupId].push(selectedMessageForDelete._id);
       }
-      
+
       // Save back to localStorage
       localStorage.setItem(storageKey, JSON.stringify(deletedMessages));
-      console.log(`Saved message ${selectedMessageForDelete._id} as locally deleted`);
-      
+      console.log(
+        `Saved message ${selectedMessageForDelete._id} as locally deleted`
+      );
+
       // Remove message from UI
-      setMessages((prevMessages) => 
+      setMessages((prevMessages) =>
         prevMessages.filter((msg) => msg._id !== selectedMessageForDelete._id)
       );
-      
+
       // Try to emit a socket event in case server supports this
       if (socket && socket.connected) {
         socket.emit("deleteMessageForMe", {
           messageId: selectedMessageForDelete._id,
           userId: user._id,
-          groupId: groupId
+          groupId: groupId,
         });
       }
 
       // Close dialog and clear selected message
       setShowDeleteOptionsDialog(false);
       setSelectedMessageForDelete(null);
-      
+
       showToast("Đã xóa tin nhắn", "success");
     } catch (error) {
       console.error("Error deleting message for me:", error);
-      showToast(`Lỗi khi xóa tin nhắn: ${error.response?.data?.message || error.message || "Unknown error"}`, "error");
+      showToast(
+        `Lỗi khi xóa tin nhắn: ${
+          error.response?.data?.message || error.message || "Unknown error"
+        }`,
+        "error"
+      );
     }
   };
 
@@ -2099,26 +2122,26 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
               </button>
               {(userRole === "admin" || userRole === "coAdmin") && (
                 <>
-                  <button 
+                  <button
                     className="option-button"
                     onClick={handleEditGroupName}
                   >
                     <FiSettings /> Chỉnh sửa tên nhóm
                   </button>
-                  <button 
+                  <button
                     className="option-button"
                     onClick={() => setShowAddMemberDialog(true)}
                   >
                     <FiUserPlus /> Thêm thành viên
                   </button>
-                  <button 
+                  <button
                     className="option-button"
                     onClick={() => setShowRemoveMemberDialog(true)}
                   >
                     <FiUserX /> Xóa thành viên
                   </button>
                   {userRole === "admin" && (
-                    <button 
+                    <button
                       className="option-button"
                       onClick={handleManageCoAdmins}
                     >
@@ -2127,14 +2150,14 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
                   )}
                 </>
               )}
-              <button 
+              <button
                 className="option-button danger"
                 onClick={handleLeaveGroup}
               >
                 <FiArchive /> Rời nhóm
               </button>
               {userRole === "admin" && (
-                <button 
+                <button
                   className="option-button danger"
                   onClick={handleDeleteGroup}
                 >
@@ -2476,10 +2499,14 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
                 <button className="delete-option" onClick={deleteMessageForMe}>
                   Xóa chỉ với tôi
                 </button>
-                
+
                 {/* Only show "Delete for everyone" if the user is the sender or has admin permissions */}
-                {(isMessageFromCurrentUser(selectedMessageForDelete, user?._id) || 
-                  userRole === "admin" || userRole === "coAdmin") && (
+                {(isMessageFromCurrentUser(
+                  selectedMessageForDelete,
+                  user?._id
+                ) ||
+                  userRole === "admin" ||
+                  userRole === "coAdmin") && (
                   <button
                     className="delete-option delete-for-everyone"
                     onClick={deleteMessageForEveryone}
@@ -2809,7 +2836,9 @@ const GroupChatInterface: React.FC<GroupChatInterfaceProps> = ({ overrideGroupId
 
           <input
             type="text"
-            placeholder={isReplying ? "Type your reply..." : "Type a message..."}
+            placeholder={
+              isReplying ? "Type your reply..." : "Type a message..."
+            }
             value={newMessage}
             onChange={handleTyping}
             disabled={isUploading}

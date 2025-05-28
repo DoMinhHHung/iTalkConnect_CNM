@@ -11,7 +11,6 @@ const cloudinary = require("../config/cloudinaryConfig");
 // Promisify exec để sử dụng async/await
 const execAsync = promisify(exec);
 
-// Kết nối với GridFS
 let gfs;
 
 // Đảm bảo kết nối MongoDB trước khi sử dụng GridFS
@@ -49,7 +48,6 @@ const ensureGridFSConnection = () => {
   });
 };
 
-// Khởi tạo bucket GridFS
 mongoose.connection.once("open", () => {
   console.log("MongoDB connection open event triggered");
   gfs = new GridFSBucket(mongoose.connection.db, {
@@ -58,7 +56,6 @@ mongoose.connection.once("open", () => {
   console.log("GridFS bucket initialized");
 });
 
-// Thời gian sống của file (7 ngày = 604800000 ms)
 const FILE_EXPIRY_TIME = 7 * 24 * 60 * 60 * 1000; // 7 ngày
 
 const saveMessage = async ({
@@ -458,10 +455,10 @@ exports.unsendMessage = async (req, res) => {
     message.isUnsent = true;
     message.unsent = true; // For backward compatibility with different field names
     message.content = "This message has been unsent";
-    
+
     // Clear all reactions
     message.reactions = {};
-    
+
     // Properly handle different message types
     if (message.type !== "text") {
       console.log(
@@ -538,7 +535,7 @@ exports.unsendMessageSocket = async (data) => {
     message.isUnsent = true;
     message.unsent = true; // For backward compatibility
     message.content = "This message has been unsent";
-    
+
     // Clear all reactions
     message.reactions = {};
 
@@ -580,12 +577,14 @@ const getMessages = async (req, res) => {
   try {
     const messages = await Message.find({
       roomId,
-      hiddenFor: { $ne: requesterId } // Lọc bỏ tin nhắn đã bị ẩn với người dùng hiện tại
+      hiddenFor: { $ne: requesterId }, // Lọc bỏ tin nhắn đã bị ẩn với người dùng hiện tại
     })
       .populate("sender", "name avt")
       .sort({ createdAt: 1 });
-    
-    console.log(`Fetched ${messages.length} messages for room ${roomId}, excluding hidden messages for user ${requesterId}`);
+
+    console.log(
+      `Fetched ${messages.length} messages for room ${roomId}, excluding hidden messages for user ${requesterId}`
+    );
 
     res.status(200).json(messages);
   } catch (error) {
@@ -606,13 +605,15 @@ const getMessagesBetweenUsers = async (req, res) => {
     // Tìm tin nhắn dựa vào roomId và lọc ra những tin nhắn không bị ẩn với người dùng hiện tại
     const messages = await Message.find({
       roomId: roomId,
-      hiddenFor: { $ne: req.user._id } // Lọc bỏ tin nhắn đã bị ẩn với người dùng hiện tại
+      hiddenFor: { $ne: req.user._id }, // Lọc bỏ tin nhắn đã bị ẩn với người dùng hiện tại
     })
       .populate("sender", "name avt")
       .sort({ createdAt: 1 });
 
-    console.log(`Fetched ${messages.length} messages between users ${userId1} and ${userId2}, excluding hidden messages for user ${requesterId}`);
-    
+    console.log(
+      `Fetched ${messages.length} messages between users ${userId1} and ${userId2}, excluding hidden messages for user ${requesterId}`
+    );
+
     res.status(200).json(messages);
   } catch (error) {
     console.error("Error fetching messages between users:", error);
@@ -1030,19 +1031,21 @@ exports.handleReaction = async (req, res) => {
     const userId = req.user._id;
 
     // Normalize action type (mobile sends 'type', web sends 'action')
-    const effectiveAction = action || type || 'add';
-    
+    const effectiveAction = action || type || "add";
+
     // Standardize emoji format - this is critical for cross-platform compatibility
     const standardizedEmoji = standardizeEmoji(emoji);
-    
-    console.log(`Handling reaction: ${effectiveAction} ${standardizedEmoji} to message ${messageId} from user ${userId}`);
+
+    console.log(
+      `Handling reaction: ${effectiveAction} ${standardizedEmoji} to message ${messageId} from user ${userId}`
+    );
 
     // Find the message
     const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({
         success: false,
-        message: "Message not found"
+        message: "Message not found",
       });
     }
 
@@ -1052,15 +1055,19 @@ exports.handleReaction = async (req, res) => {
     }
 
     // Handle add or remove
-    if (effectiveAction === 'add' || effectiveAction === 'update') {
+    if (effectiveAction === "add" || effectiveAction === "update") {
       // Ensure the emoji array exists
       if (!message.reactions[standardizedEmoji]) {
         message.reactions[standardizedEmoji] = [];
       }
 
       // Check if user already has this reaction
-      const existingReactionIndex = message.reactions[standardizedEmoji].findIndex(
-        r => (r.userId && r.userId.toString() === userId.toString()) || r.userId === userId
+      const existingReactionIndex = message.reactions[
+        standardizedEmoji
+      ].findIndex(
+        (r) =>
+          (r.userId && r.userId.toString() === userId.toString()) ||
+          r.userId === userId
       );
 
       if (existingReactionIndex === -1) {
@@ -1068,16 +1075,21 @@ exports.handleReaction = async (req, res) => {
         message.reactions[standardizedEmoji].push({
           emoji: standardizedEmoji,
           userId: userId,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
       }
-    } else if (effectiveAction === 'remove' || effectiveAction === 'delete') {
+    } else if (effectiveAction === "remove" || effectiveAction === "delete") {
       // Remove existing reaction
       if (message.reactions[standardizedEmoji]) {
-        message.reactions[standardizedEmoji] = message.reactions[standardizedEmoji].filter(
-          r => (r.userId && r.userId.toString() !== userId.toString()) && r.userId !== userId
+        message.reactions[standardizedEmoji] = message.reactions[
+          standardizedEmoji
+        ].filter(
+          (r) =>
+            r.userId &&
+            r.userId.toString() !== userId.toString() &&
+            r.userId !== userId
         );
-        
+
         // Clean up empty arrays
         if (message.reactions[standardizedEmoji].length === 0) {
           delete message.reactions[standardizedEmoji];
@@ -1098,7 +1110,7 @@ exports.handleReaction = async (req, res) => {
       // Create a stable room ID from sender and receiver
       const participants = [
         message.sender.toString(),
-        message.receiver.toString()
+        message.receiver.toString(),
       ].sort();
       roomId = `${participants[0]}_${participants[1]}`;
     }
@@ -1110,52 +1122,54 @@ exports.handleReaction = async (req, res) => {
       userId,
       action: effectiveAction,
       // Include the complete reactions state for clients
-      reactions: message.reactions
+      reactions: message.reactions,
     };
 
     // Broadcast to relevant rooms if socket.io is available
-    if (req.app.get('io')) {
-      const io = req.app.get('io');
-      
+    if (req.app.get("io")) {
+      const io = req.app.get("io");
+
       // Broadcast to the main chat room
-      io.to(roomId).emit('reaction', reactionData);
-      
+      io.to(roomId).emit("reaction", reactionData);
+
       // Also emit with alternative event names for different clients
-      io.to(roomId).emit('messageReaction', reactionData);
-      
+      io.to(roomId).emit("messageReaction", reactionData);
+
       // Mobile-specific format
-      io.to(roomId).emit('messageReaction', {
+      io.to(roomId).emit("messageReaction", {
         messageId: message._id,
         emoji: standardizedEmoji,
         senderId: userId,
         type: effectiveAction,
-        reactions: message.reactions
+        reactions: message.reactions,
       });
-      
+
       // Extra events for different platforms
-      if (effectiveAction === 'add') {
-        io.to(roomId).emit('reactionAdded', reactionData);
-        io.to(roomId).emit('addedReaction', reactionData);
+      if (effectiveAction === "add") {
+        io.to(roomId).emit("reactionAdded", reactionData);
+        io.to(roomId).emit("addedReaction", reactionData);
       } else {
-        io.to(roomId).emit('reactionRemoved', reactionData);
-        io.to(roomId).emit('removedReaction', reactionData);
+        io.to(roomId).emit("reactionRemoved", reactionData);
+        io.to(roomId).emit("removedReaction", reactionData);
       }
-      
-      console.log(`Reaction ${standardizedEmoji} broadcasted to room ${roomId}`);
+
+      console.log(
+        `Reaction ${standardizedEmoji} broadcasted to room ${roomId}`
+      );
     }
 
     // Return success with the updated message
     return res.status(200).json({
       success: true,
       message: "Reaction updated successfully",
-      data: message
+      data: message,
     });
   } catch (error) {
     console.error("Error handling reaction:", error);
     return res.status(500).json({
       success: false,
       message: "Server error processing reaction",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -1163,91 +1177,92 @@ exports.handleReaction = async (req, res) => {
 // Legacy addReaction handler - redirects to unified handler
 exports.addReaction = async (req, res) => {
   req.params.messageId = req.params.messageId || req.body.messageId;
-  req.body.action = 'add';
+  req.body.action = "add";
   return this.handleReaction(req, res);
 };
 
 // Legacy removeReaction handler - redirects to unified handler
 exports.removeReaction = async (req, res) => {
   req.params.messageId = req.params.messageId || req.body.messageId;
-  req.body.action = 'remove';
+  req.body.action = "remove";
   return this.handleReaction(req, res);
 };
 
 // Utility function to standardize emoji formats across different clients
 const standardizeEmoji = (emoji) => {
   if (!emoji) return "👍"; // Default to thumbs up
-  
+
   // Handle string emoji
-  if (typeof emoji === 'string') {
+  if (typeof emoji === "string") {
     // Common emoji keywords mapping
     const emojiMap = {
-      "like": "👍",
-      "love": "❤️",
-      "heart": "❤️",
-      "haha": "😂",
-      "laugh": "😂",
-      "joy": "😂",
-      "wow": "😮",
-      "surprised": "😮",
-      "sad": "😢",
-      "cry": "😢", 
-      "crying": "😢",
-      "angry": "😡",
-      "fire": "🔥",
-      "clap": "👏",
-      "thumbsup": "👍",
-      "thumbs_up": "👍",
+      like: "👍",
+      love: "❤️",
+      heart: "❤️",
+      haha: "😂",
+      laugh: "😂",
+      joy: "😂",
+      wow: "😮",
+      surprised: "😮",
+      sad: "😢",
+      cry: "😢",
+      crying: "😢",
+      angry: "😡",
+      fire: "🔥",
+      clap: "👏",
+      thumbsup: "👍",
+      thumbs_up: "👍",
       "thumbs-up": "👍",
-      "[object object]": "👍"
+      "[object object]": "👍",
     };
-    
+
     // Check if we have a mapping for lowercase version
     const lowerEmoji = emoji.toLowerCase().trim();
     return emojiMap[lowerEmoji] || emoji;
   }
-  
+
   // Handle object format from some clients
-  if (typeof emoji === 'object' && emoji !== null) {
-    if (emoji.emoji && typeof emoji.emoji === 'string') {
+  if (typeof emoji === "object" && emoji !== null) {
+    if (emoji.emoji && typeof emoji.emoji === "string") {
       return emoji.emoji;
     }
-    if (emoji.type && typeof emoji.type === 'string') {
+    if (emoji.type && typeof emoji.type === "string") {
       return standardizeEmoji(emoji.type); // Recursively standardize
     }
   }
-  
+
   return "👍"; // Default fallback
 };
 
 // Format reactions for consistent client display
 const formatReactionsForClients = (message) => {
   if (!message || !message.reactions) return message;
-  
+
   // Create a deep copy to avoid modifying the original
   const formattedMessage = { ...message };
-  
+
   try {
-    // Convert to format both web and mobile clients understand: userId -> emoji 
+    // Convert to format both web and mobile clients understand: userId -> emoji
     const updatedReactions = {};
-    
+
     // First ensure reactions is an object
-    if (typeof formattedMessage.reactions !== 'object') {
+    if (typeof formattedMessage.reactions !== "object") {
       formattedMessage.reactions = {};
       return formattedMessage;
     }
-    
+
     // Process each reaction
     Object.entries(formattedMessage.reactions).forEach(([key, value]) => {
       // Check if key is an emoji (server format)
       const isKeyEmoji = /[\u{1F300}-\u{1F6FF}]/u.test(key);
-      
+
       if (isKeyEmoji) {
         // Format 1: emoji -> [users]
         if (Array.isArray(value)) {
-          value.forEach(userId => {
+          value.forEach((userId) => {
             if (userId) {
-              const id = typeof userId === 'object' ? userId.toString() : userId;
+              const id =
+                typeof userId === "object" ? userId.toString() : userId;
               updatedReactions[id] = standardizeEmoji(key);
             }
           });
@@ -1257,12 +1272,12 @@ const formatReactionsForClients = (message) => {
         updatedReactions[key] = standardizeEmoji(value);
       }
     });
-    
+
     formattedMessage.reactions = updatedReactions;
   } catch (error) {
     console.error("Error formatting reactions for clients:", error);
   }
-  
+
   return formattedMessage;
 };
 
@@ -1273,12 +1288,14 @@ exports.addReactionSocket = async (messageId, userId, emoji) => {
       console.error("Missing required parameters for reaction");
       return null;
     }
-    
+
     // Standardize emoji format
     const standardizedEmoji = standardizeEmoji(emoji);
-    
-    console.log(`Socket API: Processing reaction ${standardizedEmoji} to message ${messageId} from user ${userId}`);
-    
+
+    console.log(
+      `Socket API: Processing reaction ${standardizedEmoji} to message ${messageId} from user ${userId}`
+    );
+
     // Find the message
     const message = await Message.findById(messageId);
     if (!message) {
@@ -1290,10 +1307,10 @@ exports.addReactionSocket = async (messageId, userId, emoji) => {
     if (!message.reactions) {
       message.reactions = {};
     }
-    
+
     // Handle both formats - Support userId to emoji mapping
     const isRemovingReaction = !standardizedEmoji || standardizedEmoji === "";
-    
+
     if (isRemovingReaction) {
       // Remove any existing reaction from this user
       if (message.reactions[userId]) {
@@ -1308,9 +1325,11 @@ exports.addReactionSocket = async (messageId, userId, emoji) => {
 
     // Save the updated message
     await message.save();
-    
+
     // Return the message with formatted reactions for clients
-    return formatReactionsForClients(message.toObject ? message.toObject() : message);
+    return formatReactionsForClients(
+      message.toObject ? message.toObject() : message
+    );
   } catch (error) {
     console.error("Error in socket addReactionSocket:", error);
     return null;
