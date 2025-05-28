@@ -20,6 +20,7 @@ interface ChatItem {
   };
   isOnline?: boolean; // For direct chats
   memberCount?: number; // For group chats
+  unreadCount?: number; // Thêm số tin nhắn chưa đọc
 }
 
 const ChatSidebar: React.FC = () => {
@@ -49,6 +50,16 @@ const ChatSidebar: React.FC = () => {
             },
           }
         );
+
+        // Fetch unread messages count
+        const unreadResponse = await axios.get(
+          `https://italkconnect-v3.onrender.com/api/chat/unread-count`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const unreadCounts = unreadResponse.data;
 
         // Fetch groups (group chats)
         const groupsResponse = await axios.get(
@@ -143,19 +154,31 @@ const ChatSidebar: React.FC = () => {
         // Wait for all last message fetches to complete
         await Promise.allSettled(lastMessagePromises);
 
-        // Combine and sort all chats by last activity
+        // Add unread count to direct chats
+        directChats.forEach((chat) => {
+          chat.unreadCount = unreadCounts[chat._id] || 0;
+        });
+
+        // Add unread count to group chats
+        groupChats.forEach((chat) => {
+          chat.unreadCount = unreadCounts[chat._id] || 0;
+        });
+
+        // Combine and sort all chats by last activity and unread status
         const allChats = [...directChats, ...groupChats].sort((a, b) => {
-          // If both have last messages, sort by date
+          // Nếu có tin nhắn chưa đọc, ưu tiên hiển thị trước
+          if (a.unreadCount && !b.unreadCount) return -1;
+          if (!a.unreadCount && b.unreadCount) return 1;
+
+          // Nếu cả hai đều có hoặc không có tin nhắn chưa đọc, sắp xếp theo thời gian
           if (a.lastMessage && b.lastMessage) {
             return (
               new Date(b.lastMessage.createdAt).getTime() -
               new Date(a.lastMessage.createdAt).getTime()
             );
           }
-          // If only one has a last message, it comes first
           if (a.lastMessage) return -1;
           if (b.lastMessage) return 1;
-          // If neither has a last message, sort alphabetically
           return a.name.localeCompare(b.name);
         });
 
@@ -295,7 +318,7 @@ const ChatSidebar: React.FC = () => {
         {chatList.map((chat) => (
           <div
             key={`${chat.isGroup ? "group" : "direct"}-${chat._id}`}
-            className="chat-item"
+            className={`chat-item ${chat.unreadCount ? "unread" : ""}`}
             onClick={() => handleChatClick(chat)}
           >
             <div className="chat-avatar-container">
@@ -310,7 +333,14 @@ const ChatSidebar: React.FC = () => {
             </div>
 
             <div className="chat-info">
-              <div className="chat-name">{chat.name}</div>
+              <div className="chat-name">
+                {chat.name}
+                {chat.unreadCount && (
+                  <span className="unread-badge">
+                    {chat.unreadCount > 5 ? "5+" : chat.unreadCount}
+                  </span>
+                )}
+              </div>
               <div className="chat-preview">
                 {chat.lastMessage
                   ? getLastMessagePreview(chat)

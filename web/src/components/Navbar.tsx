@@ -5,7 +5,7 @@ import { logout } from "../redux/slices/authSlice";
 import { io, Socket } from "socket.io-client";
 import "../scss/Navbar.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
+// import { faBell } from "@fortawesome/free-solid-svg-icons";
 
 const Navbar: React.FC = () => {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
@@ -184,7 +184,7 @@ const Navbar: React.FC = () => {
                   className="btn btn-light position-relative"
                   onClick={toggleNotificationDropdown}
                 >
-                  <FontAwesomeIcon icon={faBell} />
+                  {/* <FontAwesomeIcon icon={faBell} /> */}
                   {notifications.length > 0 && (
                     <span className="notification-badge">
                       {notifications.length}
